@@ -1,0 +1,15 @@
+.DS_Store
+node_modules
+dist
+coverage
+.turbo
+.next
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+backend/.env
+frontend/.env.local
+configs/*.env
+.husky/_/*
+.vscode
+
