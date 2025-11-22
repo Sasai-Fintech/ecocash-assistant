@@ -3,7 +3,7 @@
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotChat } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
-import { BalanceCard } from "@/components/widgets/BalanceCard";
+import { EcocashWidgets } from "@/components/EcocashWidgets";
 
 export default function Home() {
   return (
@@ -11,17 +11,13 @@ export default function Home() {
       agent="ecocash_agent"
       runtimeUrl="/api/copilotkit"
     >
+      <EcocashWidgets />
       <main className="flex flex-col h-screen bg-gray-50 dark:bg-zinc-900">
-        {/* Header / Dashboard Area */}
+        {/* Header */}
         <div className="p-6 bg-white dark:bg-zinc-800 shadow-sm z-10">
-          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">EcoCash Assistant</h1>
-              <p className="text-sm text-gray-500">Your AI Financial Companion</p>
-            </div>
-            <div className="w-full md:w-auto">
-              <BalanceCard />
-            </div>
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">EcoCash Assistant</h1>
+            <p className="text-sm text-gray-500">Your AI Financial Companion</p>
           </div>
         </div>
 

@@ -1,24 +1,21 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCopilotChat } from "@copilotkit/react-core";
+import { RenderFunctionStatus } from "@copilotkit/react-core";
 
-export function TicketConfirmation({ issue, description }: { issue: string, description: string }) {
-    const { appendMessage } = useCopilotChat();
+export type TicketConfirmationProps = {
+  issue: string;
+  description: string;
+  status: RenderFunctionStatus;
+  handler: (response: string) => void;
+};
 
+export function TicketConfirmation({ issue, description, status, handler }: TicketConfirmationProps) {
     const handleConfirm = () => {
-        appendMessage({
-            id: Math.random().toString(),
-            role: "user",
-            content: "Confirmed",
-        } as any);
+        handler("CONFIRM");
     };
 
     const handleCancel = () => {
-        appendMessage({
-            id: Math.random().toString(),
-            role: "user",
-            content: "Cancelled",
-        } as any);
+        handler("CANCEL");
     };
 
     return (
@@ -26,17 +23,30 @@ export function TicketConfirmation({ issue, description }: { issue: string, desc
             <CardHeader>
                 <CardTitle>Confirm Ticket Creation</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-4">
                 <div>
-                    <span className="font-semibold">Issue:</span> {issue}
+                    <span className="font-semibold text-sm text-gray-700">Issue:</span>
+                    <p className="mt-1 text-sm text-gray-900">{issue || "No issue specified"}</p>
                 </div>
                 <div>
-                    <span className="font-semibold">Description:</span> {description}
+                    <span className="font-semibold text-sm text-gray-700">Description:</span>
+                    <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{description || "No description provided"}</p>
                 </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                <Button onClick={handleConfirm}>Confirm</Button>
+                <Button 
+                    variant="outline" 
+                    onClick={handleCancel}
+                    disabled={status === "complete" || status === "inProgress"}
+                >
+                    Cancel
+                </Button>
+                <Button 
+                    onClick={handleConfirm}
+                    disabled={status === "complete" || status === "inProgress"}
+                >
+                    Confirm
+                </Button>
             </CardFooter>
         </Card>
     );
