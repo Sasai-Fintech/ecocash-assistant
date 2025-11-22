@@ -78,26 +78,28 @@
   @apply hidden !important;
 }
 
-/* Hide default CopilotKit footer and replace with Sasai branding */
-[data-copilotkit-footer],
-.copilotKitChatFooter,
-div[class*="footer" i],
-div[class*="Footer" i],
-[class*="powered" i],
-[class*="Powered" i] {
-  display: none !important;
+/* Replace CopilotKit footer with Sasai branding */
+.poweredBy {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+  text-indent: -9999px !important;
+  overflow: hidden !important;
+  position: static !important;
+  padding: 3px 0 !important;
+  height: auto !important;
+  margin: 0 !important;
 }
 
-/* Add custom Sasai footer using CSS pseudo-element */
-[class*="CopilotChat"]::after,
-[class*="copilotChat"]::after {
+.poweredBy::after {
   content: "Powered By Sasai";
-  display: block;
-  text-align: center;
-  padding: 0.5rem;
-  font-size: 0.75rem;
-  color: rgb(107 114 128);
-  border-top: 1px solid rgb(229 231 235);
-  margin-top: auto;
+  font-size: 12px !important;
+  line-height: normal !important;
+  color: rgb(214, 214, 214) !important;
+  text-align: center !important;
+  display: block !important;
+  position: static !important;
+  text-indent: 0 !important;
+  padding: 3px 0 !important;
 }
 
