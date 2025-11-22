@@ -78,3 +78,13 @@
   @apply hidden !important;
 }
 
+/* Hide default CopilotKit footer */
+[data-copilotkit-footer],
+.copilotKitChatFooter,
+div[class*="footer" i],
+div[class*="Footer" i],
+[class*="powered" i],
+[class*="Powered" i] {
+  display: none !important;
+}
+
