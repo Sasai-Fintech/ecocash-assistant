@@ -1,21 +1,31 @@
-import uvicorn
+from dotenv import load_dotenv
+load_dotenv()
 
-from .factory import create_app
-from .config import get_settings
+from fastapi import FastAPI
+from copilotkit.integrations.fastapi import add_fastapi_endpoint
+from copilotkit import CopilotKitRemoteEndpoint, LangGraphAgent
 
-app = create_app()
+from agent.graph import build_graph
 
+app = FastAPI(title="Ecocash Assistant Backend")
 
-def run():
-  settings = get_settings()
-  uvicorn.run(
-    "app.main:app",
-    host="0.0.0.0",
-    port=settings.port,
-    reload=settings.environment == "development",
-  )
+# Build the graph
+graph = build_graph()
 
+# Create the remote endpoint
+sdk = CopilotKitRemoteEndpoint(
+    agents=[
+        LangGraphAgent(
+            name="ecocash_agent",
+            description="Ecocash Relationship Manager",
+            agent=graph,
+        )
+    ],
+)
 
-if __name__ == "__main__":
-  run()
+# Add the endpoint
+add_fastapi_endpoint(app, sdk, "/api/copilotkit")
 
+@app.get("/")
+async def root():
+    return {"message": "Ecocash Assistant Backend is running"}

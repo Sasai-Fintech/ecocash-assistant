@@ -1,84 +1,219 @@
-# Ecocash AI Relationship Manager
+# EcoCash AI Assistant
 
-Conversational EcoCash “relationship manager” that lives inside the mobile super-app as a CopilotKit-powered widget. It talks AG-UI with the frontend, runs on Agno AgentOS v2, persists sessions/memory in MongoDB Atlas, and uses FastMCP tooling to talk to wallet/ticket systems (mocked for now).
+An AI-powered conversational assistant for EcoCash fintech services, built with CopilotKit, LangGraph, and Next.js. The assistant helps users manage their wallet balances, view transactions, and create support tickets through natural language interactions.
 
-## Repository Layout
+## 🏗️ Architecture
 
-| Path                | Description                                                             |
-| ------------------- | ----------------------------------------------------------------------- |
-| `frontend/`         | Next.js + CopilotKit widget, AG-UI renderer, Storybook, mobile wrapper. |
-| `backend/app/`      | FastAPI bootstrap + AgentOS integration, middleware, health routes.     |
-| `backend/agent/`    | Agent definition, MCP tool wiring, AG-UI interface + widgets.           |
-| `backend/mcp/`      | FastMCP v2 dummy wallet/ticket server (stdio).                          |
-| `packages/schemas/` | Shared Zod widget schemas consumed by both sides.                       |
-| `docs/`             | PRD, user journeys, architecture notes, milestones.                     |
+This is a monorepo containing:
 
-## Prerequisites
+- **Backend** (`/backend`): FastAPI server with LangGraph agent powered by OpenAI
+- **Frontend** (`/frontend`): Next.js application with CopilotKit React components
+- **Schemas** (`/packages/schemas`): Shared TypeScript/Zod schemas for type-safe widget communication
 
-- Node.js 18+ with `pnpm`
+### Technology Stack
+
+**Backend:**
+- Python 3.12
+- FastAPI
+- LangGraph (agent orchestration)
+- CopilotKit (AG-UI protocol)
+- OpenAI GPT-4 Turbo
+- Poetry (dependency management)
+
+**Frontend:**
+- Next.js 14
+- React 18
+- TypeScript
+- CopilotKit React
+- Tailwind CSS
+- Radix UI components
+
+## 🚀 Quick Start
+
+### Prerequisites
+
 - Python 3.12+
-- MongoDB Atlas cluster (URI provided via env)
-- OpenAI API access (GPT‑5 Mini)
-- (Optional) `direnv` or similar for env management
+- Node.js 18+
+- Poetry (for Python dependency management)
+- npm or pnpm
 
-## Environment Variables
+### Environment Setup
 
-Copy `configs/sample.env` to `config/.env` (backend) and set:
-
-- `MONGODB_URI`, `MONGODB_DB_NAME`
-- `OPENAI_API_KEY`, `AGNO_MODEL_ID` (defaults to `gpt-5-mini`)
-- `MCP_WALLET_BASE_URL`, `MCP_TICKET_BASE_URL` (dummy FastMCP for local dev)
-- Frontend `NEXT_PUBLIC_*` values (used by CopilotKit runtime + API proxy)
-- Optional: `USE_IN_MEMORY_DB=true` for running backend tests without Mongo.
-
-> **Mobile wrapper:** Load `http://localhost:3000/mobile-wrapper.html`, paste a JWT and optional metadata, then click **Launch Chat** to open the widget exactly as the mobile app would. The wrapper injects the token/metadata into the iframe query params so the frontend can forward the JWT to AgentOS + MCP tools.
-
-## Installation
-
+1. **Backend Environment** (`backend/.env`):
 ```bash
-# Install JS deps
-pnpm install
-
-# Install Python deps
-cd backend && python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-## Running Locally
+2. **Frontend Environment** (`frontend/.env.local`):
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+REMOTE_ACTION_URL=http://localhost:8000/api/copilotkit
+```
 
-1. **Backend** – FastAPI, Agno AgentOS, and FastMCP run in the same process:
+### Installation & Running
 
-   ```bash
-   cd backend && source .venv/bin/activate
-   python -m app.main
-   ```
+#### Option 1: Using the Start Script (Recommended)
 
-   The Agno agent autostarts a local FastMCP server (stdio transport) with mock wallet/ticket tools and mounts AG‑UI at `http://localhost:8000/agui`.
+```bash
+chmod +x start.sh
+./start.sh
+```
 
-2. **Frontend** – CopilotKit widget + API route proxy:
-   ```bash
-   cd frontend
-   pnpm dev
-   ```
-   CopilotKit’s runtime is exposed at `/api/copilotkit` and forwards requests to the backend AG‑UI interface while injecting the mobile JWT header.
+This will start both backend and frontend services automatically.
 
-## Testing
+#### Option 2: Manual Setup
 
-- Backend: `cd backend && pytest` (JWT middleware, in-memory Mongo stub, dummy MCP server).
-- Frontend: `pnpm storybook` for widget QA (integration tests forthcoming).
-- Manual E2E: run both services, open `mobile-wrapper.html`, send prompts such as “Show my balance” or “Raise a ticket”.
+**Backend:**
+```bash
+cd backend
+poetry install
+poetry run uvicorn app.main:app --reload --port 8000
+```
 
-## Documentation
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- `docs/prd.md` – product requirements (MVP scope)
-- `docs/user-journeys.md` – key conversational flows
-- `docs/architecture.md` – component + dataflow overview (kept in sync with implementation)
-- `docs/milestones.md` – implementation roadmap + status
-- `docs/decisions.md` – running log of engineering decisions + rationale
+### Access the Application
 
-## Current Status
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **Backend Health Check**: http://localhost:8000/
 
-- ✅ Backend AgentOS upgraded to OpenAI SDK `2.8.1` and uses official AG-UI interface with FastMCP dummy tools.
-- ✅ Frontend session bootstrap decodes JWT locally and forwards headers to CopilotKit requests.
-- ✅ AG-UI widgets validated through shared Zod/Pydantic schemas; renderer supports balances, transactions, ticket form/status, confirmation.
-- 🚧 Pending: production MCP backends, ticket creation workflows, integration/E2E tests, observability dashboards.
+## 📁 Project Structure
+
+```
+ecocash-assistant/
+├── backend/                 # Python FastAPI backend
+│   ├── agent/              # LangGraph agent definition
+│   │   ├── graph.py       # Agent workflow graph
+│   │   └── tools.py       # Agent tools (placeholder implementations)
+│   ├── app/                # FastAPI application
+│   │   └── main.py        # FastAPI entry point
+│   ├── engine/             # Agent engine components
+│   │   ├── chat.py        # Chat node implementation
+│   │   └── state.py       # Agent state definitions
+│   ├── mcp/                # MCP tools (future integration)
+│   └── pyproject.toml      # Poetry dependencies
+├── frontend/               # Next.js frontend
+│   ├── app/                # Next.js app directory
+│   │   ├── page.tsx       # Main chat interface
+│   │   └── api/            # API routes
+│   │       └── copilotkit/ # CopilotKit runtime endpoint
+│   ├── components/         # React components
+│   │   ├── widgets/        # AG-UI widget components
+│   │   └── ui/             # Radix UI primitives
+│   └── lib/                # Utilities and types
+├── packages/
+│   └── schemas/            # Shared TypeScript schemas
+├── docs/                   # Project documentation
+│   ├── prd.md             # Product Requirements Document
+│   ├── architecture.md    # Architecture overview
+│   ├── milestones.md      # Implementation milestones
+│   └── user-journeys.md   # User journey definitions
+└── start.sh               # Convenience startup script
+```
+
+## 🎯 Features
+
+### Current Capabilities
+
+1. **Balance Checking**: Query wallet balances through natural language
+2. **Transaction History**: View recent transactions with structured data
+3. **Support Tickets**: Create support tickets with human-in-the-loop confirmation
+4. **Conversational Interface**: Natural language interactions powered by GPT-4
+
+### Agent Tools
+
+The backend agent exposes the following tools:
+
+- `get_balance(user_id: str)`: Retrieve wallet balance
+- `list_transactions(user_id: str, limit: int)`: List recent transactions
+- `create_ticket(user_id: str, subject: str, body: str)`: Create a support ticket
+
+### Widget Components
+
+The frontend includes reusable widget components:
+
+- `BalanceCard`: Displays wallet balance with currency formatting
+- `TransactionTable`: Shows transaction history in a table format
+- `TicketConfirmation`: Human-in-the-loop confirmation dialog
+
+## 🔧 Development
+
+### Backend Development
+
+```bash
+cd backend
+poetry install
+poetry run uvicorn app.main:app --reload --port 8000
+```
+
+The backend uses LangGraph for agent orchestration. The agent graph is defined in `backend/agent/graph.py` and uses nodes from `backend/engine/chat.py`.
+
+### Frontend Development
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend uses CopilotKit for the chat interface. The main chat component is in `frontend/app/page.tsx`.
+
+### Schema Package
+
+The shared schemas package provides type-safe communication between frontend and backend:
+
+```bash
+cd packages/schemas
+npm install
+npm run build
+```
+
+## 📚 Documentation
+
+- [Product Requirements Document](./docs/prd.md)
+- [Architecture Overview](./docs/architecture.md)
+- [Implementation Milestones](./docs/milestones.md)
+- [User Journeys](./docs/user-journeys.md)
+- [Backend README](./backend/README.md)
+- [Frontend README](./frontend/README.md)
+
+## 🧪 Testing
+
+Currently, the project uses placeholder implementations for tools. In production, these would connect to:
+
+- Real wallet/balance APIs
+- Transaction databases
+- Ticket management systems
+- MCP (Model Context Protocol) servers
+
+## 🔐 Security Notes
+
+- Environment variables should never be committed to version control
+- JWT validation should be implemented for production use
+- Rate limiting should be added for API endpoints
+- All sensitive operations require human-in-the-loop confirmation
+
+## 🚧 Roadmap
+
+See [milestones.md](./docs/milestones.md) for detailed implementation roadmap:
+
+- ✅ Milestone 1: Foundations & Architecture
+- 🚧 Milestone 2: CopilotKit Widget & UX
+- 🚧 Milestone 3: Agno AgentOS Backend
+- ⏳ Milestone 4: Ticket Workflow & Human-in-loop
+- ⏳ Milestone 5: Quality, Compliance & Launch
+
+## 📝 License
+
+[Add your license here]
+
+## 🤝 Contributing
+
+[Add contributing guidelines here]
+
