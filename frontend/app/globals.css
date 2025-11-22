@@ -78,7 +78,7 @@
   @apply hidden !important;
 }
 
-/* Hide default CopilotKit footer */
+/* Hide default CopilotKit footer and replace with Sasai branding */
 [data-copilotkit-footer],
 .copilotKitChatFooter,
 div[class*="footer" i],
@@ -86,5 +86,18 @@ div[class*="Footer" i],
 [class*="powered" i],
 [class*="Powered" i] {
   display: none !important;
+}
+
+/* Add custom Sasai footer using CSS pseudo-element */
+[class*="CopilotChat"]::after,
+[class*="copilotChat"]::after {
+  content: "Powered By Sasai";
+  display: block;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: rgb(107 114 128);
+  border-top: 1px solid rgb(229 231 235);
+  margin-top: auto;
 }
 
