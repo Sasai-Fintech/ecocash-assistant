@@ -1,103 +1,116 @@
-# Generative UI Widgets with Human-in-the-Loop Ticket Confirmation
+# Mobile Flutter Integration
 
-## Summary
-This PR implements generative UI widgets that render inline in chat messages and adds a human-in-the-loop confirmation flow for ticket creation.
+## Overview
+This PR implements Flutter WebView integration for the EcoCash Assistant, enabling seamless embedding of the chat UI in mobile applications with JWT authentication and context-aware transaction help flows.
 
-## Key Changes
+## Key Features
+
+### 🔐 Authentication & Security
+- JWT token passing from Flutter app to WebView via postMessage
+- Token forwarding through CopilotKit to backend API
+- Backend JWT extraction utilities for authenticated tool calls
+- Secure origin validation for postMessage communication
+
+### 📱 Mobile Integration
+- Flutter WebView integration with JavaScript bridge
+- Mobile wrapper HTML for testing WebView scenarios
+- Context-aware flows (transaction help with automatic detail fetching)
+- Responsive UI optimized for mobile devices
+
+### 🎯 Transaction Help Flow
+- Automatic transaction detail fetching when transaction ID is provided
+- Context-aware conversation initiation
+- Seamless user experience from transaction page to chat
+
+### 🐛 Bug Fixes
+- Fixed React hydration errors in Next.js
+- Prevented welcome message flash in mobile/iframe scenarios
+- Consistent server/client rendering
+
+### 💰 Cost Optimization
+- Updated LLM from `gpt-4-turbo-preview` to `gpt-4o-mini` for significant cost savings
+
+### 📚 Documentation
+- Organized all documentation into `docs/` folder
+- Comprehensive documentation index in README
+- Mobile integration guide for Flutter developers
+- Removed outdated and temporary documentation files
+
+### 🎨 UI/UX Improvements
+- Added EcoCash logo to header (centered, prominently displayed)
+- Removed redundant "EcoCash Assistant" heading text
+- Optimized header layout to prevent unnecessary width expansion
+- Improved visual branding with larger, centered logo
+
+## Technical Changes
 
 ### Frontend
-- **Generative UI Widgets**: Implemented `useCopilotAction` with `render` for balance and transaction widgets
-  - Widgets automatically render inline when tools are called
-  - Follows [CopilotKit backend tools pattern](https://docs.copilotkit.ai/langgraph/generative-ui/backend-tools)
-  - Added loading states during tool execution
+- **New Files:**
+  - `frontend/lib/hooks/use-mobile-auth.ts` - JWT authentication hook
+  - `frontend/lib/hooks/use-mobile-context.ts` - Context management hook
+  - `frontend/lib/mobile-bridge.ts` - TypeScript types for mobile communication
+  - `frontend/public/mobile-wrapper.html` - Testing wrapper for WebView simulation
+  - `frontend/public/ecocashlogo.png` - EcoCash brand logo
 
-- **Human-in-the-Loop Ticket Confirmation**
-  - Updated `TicketConfirmation` component to use `handler` from `renderAndWait`
-  - Requires explicit user confirmation before creating tickets
-  - Issue and description auto-populated from user query
-
-- **Widget Components**
-  - `BalanceCard` and `TransactionTable` now accept props directly (pure components)
-  - Removed external balance card from header
-  - Created `EcocashWidgets` component to centralize widget registration
+- **Modified Files:**
+  - `frontend/app/page.tsx` - Integrated mobile hooks, fixed hydration issues, added centered logo
+  - `frontend/app/api/copilotkit/route.ts` - Header forwarding for JWT
+  - `frontend/components/widgets/*` - Mobile responsiveness improvements
 
 ### Backend
-- **Simplified Graph Structure**
-  - Use standard `ToolNode` for tool execution
-  - Removed custom state management for widgets
-  - Tools return values directly (no state extraction needed)
+- **New Files:**
+  - `backend/app/auth.py` - JWT extraction utilities
 
-- **Human-in-the-Loop Flow**
-  - Added `ticket_confirmation_node` for showing confirmation dialog
-  - Added `perform_ticket_node` for executing ticket creation after confirmation
-  - Added `interrupt_after=["ticket_confirmation"]` to pause execution
-  - Routing logic separates confirmation and execution
+- **Modified Files:**
+  - `backend/engine/chat.py` - Updated to use gpt-4o-mini, enhanced transaction help workflow
+  - `backend/agent/tools.py` - Prepared for JWT-based authenticated calls
 
-- **LLM Instructions**
-  - Updated system message to guide LLM to extract issue and description from user queries
-  - Improved tool calling guidance
+## Testing
 
-## Technical Details
+### Manual Testing
+1. **Mobile Wrapper Testing:**
+   ```bash
+   # Start frontend
+   cd frontend && npm run dev
+   
+   # Open in browser
+   http://localhost:3000/mobile-wrapper.html?transactionId=txn_1
+   ```
 
-### Widget Rendering Pattern
-```typescript
-useCopilotAction({
-  name: "get_balance", // Must match tool name
-  render: ({ args, result, status }) => {
-    if (status !== "complete") {
-      return <LoadingState />;
-    }
-    return <BalanceCard accounts={...} />;
-  },
-});
-```
+2. **Transaction Help Flow:**
+   - Load wrapper with transaction ID
+   - Verify automatic transaction detail fetching
+   - Verify no welcome message flash
+   - Verify conversation continues from transaction context
 
-### Human-in-the-Loop Pattern
-```typescript
-useCopilotAction({
-  name: "create_ticket",
-  renderAndWait: ({ subject, body, status, handler }) => {
-    return (
-      <TicketConfirmation 
-        issue={subject}
-        description={body}
-        status={status}
-        handler={handler} // Sends "CONFIRM" or "CANCEL"
-      />
-    );
-  },
-});
-```
+### Test Scenarios
+- ✅ JWT token passing via postMessage
+- ✅ Transaction context triggering automatic detail fetch
+- ✅ No hydration errors
+- ✅ No welcome message flash in mobile scenarios
+- ✅ Responsive UI on mobile devices
 
-### Backend Flow
-1. User reports issue → LLM calls `create_ticket` with extracted subject/body
-2. Graph routes to `ticket_confirmation_node` → Shows confirmation dialog
-3. Graph interrupts and waits for user response
-4. User clicks Confirm/Cancel → Handler sends response
-5. Graph routes to `perform_ticket_node` → Creates ticket or cancels
+## Breaking Changes
+None - All changes are backward compatible. Web version continues to work without mobile bridge.
 
-## Testing Checklist
-- [x] Balance widget renders inline when asking "What's my balance?"
-- [x] Transaction table renders inline when asking "Show me transactions"
-- [x] Ticket confirmation dialog appears with issue and description populated
-- [x] Ticket is only created after clicking "Confirm"
-- [x] Cancelling ticket creation shows friendly message
-- [x] Issue and description extracted from user query automatically
-- [x] Footer displays "Powered By Sasai" instead of "Powered by CopilotKit"
-- [x] Chat input box remains functional after footer customization
+## Migration Guide
+No migration needed. Mobile integration is opt-in via WebView embedding.
 
-## Files Changed
-- `backend/agent/graph.py` - Added human-in-the-loop nodes and routing
-- `backend/engine/chat.py` - Updated LLM instructions, lazy LLM initialization
-- `backend/engine/state.py` - Simplified state (removed widget data fields)
-- `backend/agent/tools.py` - Tools return values directly
-- `frontend/components/EcocashWidgets.tsx` - New component for widget registration
-- `frontend/components/widgets/*.tsx` - Updated to accept props directly
-- `frontend/app/page.tsx` - Removed external balance card
-- `frontend/app/globals.css` - Added CSS to replace footer branding
-- `frontend/lib/types.ts` - Simplified types
+## Related Issues
+- Mobile Flutter integration requirement
+- Transaction help flow enhancement
+- Cost optimization (LLM model update)
 
-## References
-- [CopilotKit Backend Tools Documentation](https://docs.copilotkit.ai/langgraph/generative-ui/backend-tools)
-- [LangGraph Human-in-the-Loop](https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/)
+## Checklist
+- [x] Code follows project style guidelines
+- [x] Tests pass (manual testing completed)
+- [x] Documentation updated
+- [x] No breaking changes
+- [x] Mobile responsiveness verified
+- [x] Security considerations addressed (origin validation)
+
+## Screenshots/Demo
+- Mobile wrapper HTML provides full testing environment
+- Transaction help flow automatically fetches and displays transaction details
+- Clean, responsive UI optimized for mobile devices
 

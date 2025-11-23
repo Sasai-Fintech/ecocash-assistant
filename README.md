@@ -17,7 +17,7 @@ This is a monorepo containing:
 - FastAPI
 - LangGraph (agent orchestration)
 - CopilotKit (AG-UI protocol)
-- OpenAI GPT-4 Turbo
+- OpenAI GPT-4o-mini (cost-effective LLM)
 - Poetry (dependency management)
 
 **Frontend:**
@@ -113,7 +113,11 @@ ecocash-assistant/
 │   ├── prd.md             # Product Requirements Document
 │   ├── architecture.md    # Architecture overview
 │   ├── milestones.md      # Implementation milestones
-│   └── user-journeys.md   # User journey definitions
+│   ├── user-journeys.md   # User journey definitions
+│   ├── decisions.md       # Technical decisions log
+│   ├── mobile-integration.md  # Flutter mobile integration guide
+│   ├── quick-start-local.md   # Local development setup
+│   └── ...                # Additional guides (see Documentation section)
 └── start.sh               # Convenience startup script
 ```
 
@@ -123,8 +127,10 @@ ecocash-assistant/
 
 1. **Balance Checking**: Query wallet balances through natural language
 2. **Transaction History**: View recent transactions with structured data
-3. **Support Tickets**: Create support tickets with human-in-the-loop confirmation
-4. **Conversational Interface**: Natural language interactions powered by GPT-4
+3. **Transaction Help**: Context-aware transaction assistance with automatic detail fetching
+4. **Support Tickets**: Create support tickets with human-in-the-loop confirmation
+5. **Mobile Integration**: Flutter WebView integration with JWT authentication and context passing
+6. **Conversational Interface**: Natural language interactions powered by GPT-4o-mini
 
 ### Agent Tools
 
@@ -132,6 +138,7 @@ The backend agent exposes the following tools:
 
 - `get_balance(user_id: str)`: Retrieve wallet balance
 - `list_transactions(user_id: str, limit: int)`: List recent transactions
+- `get_transaction_details(user_id: str, transaction_id: str)`: Get detailed transaction information
 - `create_ticket(user_id: str, subject: str, body: str)`: Create a support ticket
 
 ### Widget Components
@@ -176,12 +183,35 @@ npm run build
 
 ## 📚 Documentation
 
-- [Product Requirements Document](./docs/prd.md)
-- [Architecture Overview](./docs/architecture.md)
-- [Implementation Milestones](./docs/milestones.md)
-- [User Journeys](./docs/user-journeys.md)
-- [Backend README](./backend/README.md)
-- [Frontend README](./frontend/README.md)
+### Core Documentation
+- [Product Requirements Document](./docs/prd.md) - Product specs and requirements
+- [Architecture Overview](./docs/architecture.md) - System architecture and design
+- [Implementation Milestones](./docs/milestones.md) - Development roadmap
+- [User Journeys](./docs/user-journeys.md) - User experience flows
+- [Technical Decisions](./docs/decisions.md) - Architecture and design decisions
+
+### Setup & Development Guides
+- [Quick Start Guide](./docs/quick-start-local.md) - Local development setup
+- [Docker Setup](./docs/docker-setup.md) - Containerized deployment
+- [Local PostgreSQL Setup](./docs/local-postgres-setup.md) - Database setup
+
+### Integration Guides
+- [Flutter Mobile Integration](./docs/mobile-integration.md) - WebView integration for mobile apps
+- [Azure Deployment](./docs/azure-deploy.md) - Cloud deployment guide
+
+### Development Guides
+- [Adding New Workflow](./docs/adding-new-workflow.md) - Creating new agent workflows
+- [LangGraph Subgraph Guide](./docs/langgraph-subgraph-guide.md) - Subgraph development
+- [Testing Checklist](./docs/testing-checklist.md) - Testing procedures
+
+### Scaling & Performance
+- [Scaling Architecture](./docs/scaling-architecture.md) - Scalability patterns
+- [Scaling Implementation](./docs/scaling-implementation.md) - Implementation details
+- [Scaling Quick Start](./docs/scaling-quick-start.md) - Quick scaling guide
+
+### Component Documentation
+- [Backend README](./backend/README.md) - Backend-specific documentation
+- [Frontend README](./frontend/README.md) - Frontend-specific documentation
 
 ## 🧪 Testing
 

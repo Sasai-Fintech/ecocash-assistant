@@ -1,9 +1,39 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotChat, useCopilotChatSuggestions } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
 import { EcocashWidgets } from "@/components/EcocashWidgets";
+import { SessionHistory } from "@/components/SessionHistory";
+import { SessionTitleGenerator } from "@/components/SessionTitleGenerator";
+import { Button } from "@/components/ui/button";
+import { Plus, History } from "lucide-react";
+import { useMobileAuth } from "@/lib/hooks/use-mobile-auth";
+import { useMobileContext } from "@/lib/hooks/use-mobile-context";
+
+function NewSessionButton() {
+  const handleNewSession = () => {
+    // Generate new thread ID - CopilotKit will use this for the new session
+    const newThreadId = `thread_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem("ecocash_current_thread", newThreadId);
+    // Reload page to start fresh session (CopilotKit will pick up new thread)
+    window.location.reload();
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9 md:h-10 md:w-10"
+      onClick={handleNewSession}
+      aria-label="New Session"
+    >
+      <Plus className="h-5 w-5 md:h-6 md:w-6" />
+    </Button>
+  );
+}
 
 function SuggestionsComponent() {
   useCopilotChatSuggestions({
@@ -47,22 +77,77 @@ function SuggestionsComponent() {
   return null; // Suggestions are automatically rendered by CopilotKit
 }
 
+// Chat component that conditionally shows initial greeting based on mobile context
+function ChatWithContext() {
+  // Get context to check if we should skip the greeting
+  const { context } = useMobileContext();
+  
+  // Always use empty initial message to avoid hydration errors
+  // This ensures server and client render consistently
+  // When transaction context is provided via postMessage, the agent will respond immediately
+  // For regular web users, they can start typing and the conversation begins naturally
+  const initialMessage = "";
+  
+  return (
+    <CopilotChat
+      className="h-full border-0 rounded-2xl shadow-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm"
+      instructions="You are the Ecocash Assistant, a helpful and friendly AI financial companion. Help users with their wallet balance, transaction history, and support tickets. Be proactive and suggest helpful actions when appropriate."
+      labels={{
+        title: "How can we help you today?",
+        // Always use empty to avoid hydration mismatch between server and client
+        // Transaction context will trigger agent response automatically
+        initial: initialMessage,
+        placeholder: "Type your message...",
+      }}
+    />
+  );
+}
+
 export default function Home() {
+  // Get JWT token from Flutter WebView (via postMessage)
+  // This hook doesn't require CopilotKit, so it can be called outside
+  const { token, userId, isAuthenticated } = useMobileAuth();
+
+  // Build properties for CopilotKit with auth headers
+  // Following CopilotKit's self-hosted auth pattern: https://docs.copilotkit.ai/langgraph/auth
+  const copilotKitProperties = token
+    ? {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(userId && { 'X-User-Id': userId }),
+        },
+      }
+    : undefined;
+
   return (
     <CopilotKit
       agent="ecocash_agent"
       runtimeUrl="/api/copilotkit"
+      properties={copilotKitProperties}
     >
       <EcocashWidgets />
       <SuggestionsComponent />
+      <SessionTitleGenerator />
       <main className="flex flex-col h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900">
         {/* Header */}
-        <div className="p-6 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm shadow-sm z-10 border-b border-gray-200/50 dark:border-zinc-700/50">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400">
-              EcoCash Assistant
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your AI Financial Companion</p>
+        <div className="p-4 sm:p-6 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm shadow-sm z-10 border-b border-gray-200/50 dark:border-zinc-700/50 relative min-h-[80px] sm:min-h-[100px]">
+          <div className="w-full flex items-center justify-between relative h-full">
+            <div className="flex-1"></div>
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="relative h-24 w-64 sm:h-32 sm:w-80 flex-shrink-0">
+                <Image
+                  src="/ecocashlogo.png"
+                  alt="EcoCash Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <NewSessionButton />
+              <SessionHistory />
+            </div>
           </div>
         </div>
 
@@ -72,15 +157,7 @@ export default function Home() {
             <div className="h-full flex flex-col gap-4">
               {/* Chat */}
               <div className="flex-1 min-h-0">
-                <CopilotChat
-                  className="h-full border-0 rounded-2xl shadow-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm"
-                  instructions="You are the Ecocash Assistant, a helpful and friendly AI financial companion. Help users with their wallet balance, transaction history, and support tickets. Be proactive and suggest helpful actions when appropriate."
-                  labels={{
-                    title: "How can we help you today?",
-                    initial: "Hello! I can help you check your balance, view transactions, or raise a support ticket. How can I help?",
-                    placeholder: "Type your message...",
-                  }}
-                />
+                <ChatWithContext />
               </div>
             </div>
           </div>

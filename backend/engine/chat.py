@@ -16,11 +16,18 @@ def get_llm():
     """Get or create the LLM instance."""
     global _llm
     if _llm is None:
-        _llm = ChatOpenAI(model="gpt-4-turbo-preview")
+        # Using gpt-4o-mini - cheapest OpenAI model with good performance
+        _llm = ChatOpenAI(model="gpt-4o-mini")
     return _llm
 
 async def chat_node(state: AgentState, config: RunnableConfig):
     """Handle chat operations for Ecocash Assistant"""
+    
+    # Debug: Log thread_id from config
+    thread_id = config.get("configurable", {}).get("thread_id", "NO_THREAD_ID")
+    print(f"[CHAT_NODE] Executing with thread_id: {thread_id}")
+    print(f"[CHAT_NODE] Full config: {config}")
+    print(f"[CHAT_NODE] Configurable keys: {list(config.get('configurable', {}).keys())}")
     
     # Get LLM instance (lazy initialization)
     llm = get_llm()
@@ -42,11 +49,17 @@ async def chat_node(state: AgentState, config: RunnableConfig):
     4. Create support tickets (create_ticket) - This will show a confirmation dialog before creating (ONLY use as last resort)
     
     CRITICAL WORKFLOW FOR TRANSACTION HELP:
-    When a user asks for help with a transaction (e.g., "I need help with my transaction to Coffee Shop on 22 Nov 2025"):
+    When a user asks for help with a transaction (e.g., "I need help with my transaction to Coffee Shop on 22 Nov 2025") 
+    OR when a user explicitly requests transaction details (e.g., "Please show me details for transaction txn_1"):
     
     STEP 1: Immediately call get_transaction_details to get the transaction summary
-    - ALWAYS call get_transaction_details first when user mentions a transaction issue
-    - Extract transaction_id from user's message if available, otherwise use empty string to get most recent
+    - ALWAYS call get_transaction_details FIRST when:
+      * User mentions a transaction issue
+      * User asks to "show details" or "fetch details" for a transaction
+      * User provides a transaction ID (format: txn_1, txn_2, etc.)
+    - Extract transaction_id from user's message using regex pattern "txn_\\d+" if available
+    - If transaction_id is found in the message, pass it to the tool
+    - If no transaction_id found, use empty string to get most recent transaction
     - The tool returns: merchant, date, amount, status, reference/UTR number
     
     STEP 2: Provide a friendly, empathetic response with transaction summary
@@ -110,6 +123,9 @@ async def chat_node(state: AgentState, config: RunnableConfig):
         ],
         config=config,
     )
+    
+    print(f"[CHAT_NODE] Response received, returning {len([response])} message(s)")
+    print(f"[CHAT_NODE] Config has checkpointer: {config.get('configurable', {}).get('thread_id') is not None}")
 
     return {
         "messages": [response],

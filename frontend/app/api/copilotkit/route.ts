@@ -16,6 +16,18 @@ export const POST = async (req: NextRequest) => {
   const searchParams = req.nextUrl.searchParams;
   const deploymentUrl = searchParams.get("lgcDeploymentUrl");
 
+  // Extract headers from request (including Authorization header from CopilotKit properties)
+  const headers: Record<string, string> = {};
+  const authHeader = req.headers.get("authorization");
+  const userIdHeader = req.headers.get("x-user-id");
+  
+  if (authHeader) {
+    headers["Authorization"] = authHeader;
+  }
+  if (userIdHeader) {
+    headers["X-User-Id"] = userIdHeader;
+  }
+
   const remoteEndpoint = deploymentUrl
     ? langGraphPlatformEndpoint({
       deploymentUrl,
@@ -27,10 +39,12 @@ export const POST = async (req: NextRequest) => {
             "Ecocash Relationship Manager",
         },
       ],
+      headers, // Forward headers to LangGraph Cloud
     })
     : copilotKitEndpoint({
       url:
         process.env.REMOTE_ACTION_URL || "http://localhost:8000/api/copilotkit",
+      headers, // Forward headers to self-hosted backend
     });
 
   const runtime = new CopilotRuntime({
