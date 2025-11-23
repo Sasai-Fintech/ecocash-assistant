@@ -21,7 +21,11 @@ dependencies = [
     "uvicorn",
     "copilotkit==0.1.54",
     "googlemaps",
-    "html2text"
+    "html2text",
+    "langgraph-checkpoint-postgres>=3.0.0",
+    "psycopg2-binary",
+    "asyncpg>=0.29.0",
+    "langchain-postgres"
 ]
 
 [tool.poetry.dependencies]

@@ -4,6 +4,34 @@ import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotChat, useCopilotChatSuggestions } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
 import { EcocashWidgets } from "@/components/EcocashWidgets";
+import { SessionHistory } from "@/components/SessionHistory";
+import { SessionTitleGenerator } from "@/components/SessionTitleGenerator";
+import { Button } from "@/components/ui/button";
+import { Plus, History } from "lucide-react";
+import { useMobileAuth } from "@/lib/hooks/use-mobile-auth";
+import { useMobileContext } from "@/lib/hooks/use-mobile-context";
+
+function NewSessionButton() {
+  const handleNewSession = () => {
+    // Generate new thread ID - CopilotKit will use this for the new session
+    const newThreadId = `thread_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem("ecocash_current_thread", newThreadId);
+    // Reload page to start fresh session (CopilotKit will pick up new thread)
+    window.location.reload();
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9 md:h-10 md:w-10"
+      onClick={handleNewSession}
+      aria-label="New Session"
+    >
+      <Plus className="h-5 w-5 md:h-6 md:w-6" />
+    </Button>
+  );
+}
 
 function SuggestionsComponent() {
   useCopilotChatSuggestions({
@@ -48,21 +76,48 @@ function SuggestionsComponent() {
 }
 
 export default function Home() {
+  // Get JWT token from Flutter WebView (via postMessage)
+  const { token, userId, isAuthenticated } = useMobileAuth();
+  
+  // Get context from Flutter (transaction help, etc.)
+  useMobileContext();
+
+  // Build properties for CopilotKit with auth headers
+  // Following CopilotKit's self-hosted auth pattern: https://docs.copilotkit.ai/langgraph/auth
+  const copilotKitProperties = token
+    ? {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(userId && { 'X-User-Id': userId }),
+        },
+      }
+    : undefined;
+
   return (
     <CopilotKit
       agent="ecocash_agent"
       runtimeUrl="/api/copilotkit"
+      properties={copilotKitProperties}
     >
       <EcocashWidgets />
       <SuggestionsComponent />
+      <SessionTitleGenerator />
       <main className="flex flex-col h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900">
         {/* Header */}
-        <div className="p-6 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm shadow-sm z-10 border-b border-gray-200/50 dark:border-zinc-700/50">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400">
-              EcoCash Assistant
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your AI Financial Companion</p>
+        <div className="p-4 sm:p-6 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm shadow-sm z-10 border-b border-gray-200/50 dark:border-zinc-700/50">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400 truncate">
+                EcoCash Assistant
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 hidden sm:block">
+                Your AI Financial Companion
+              </p>
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              <NewSessionButton />
+              <SessionHistory />
+            </div>
           </div>
         </div>
 

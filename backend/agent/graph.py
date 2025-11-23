@@ -7,7 +7,8 @@ from typing import cast
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+import os
 from langchain_core.runnables import RunnableConfig
 from copilotkit.langgraph import copilotkit_emit_message
 import logging
@@ -32,6 +33,8 @@ from agent.workflows.subgraphs.general_enquiry_graph import build_general_enquir
 # Node for ticket confirmation (human-in-the-loop)
 async def ticket_confirmation_node(state: AgentState, config: RunnableConfig):
     """Shows confirmation dialog and waits for user response."""
+    thread_id = config.get("configurable", {}).get("thread_id", "NO_THREAD_ID")
+    print(f"[TICKET_CONFIRMATION] Node executed with thread_id: {thread_id}")
     return state
 
 # Node to perform ticket creation after confirmation
@@ -109,6 +112,8 @@ async def detect_intent_node(state: AgentState, config: RunnableConfig):
     """Detect which workflow to use based on user message.
     Only detects intent if no workflow is currently active.
     """
+    thread_id = config.get("configurable", {}).get("thread_id", "NO_THREAD_ID")
+    print(f"[DETECT_INTENT] Node executed with thread_id: {thread_id}")
     # Only detect intent if no workflow is already active
     current_workflow = state.get("current_workflow")
     if current_workflow:
@@ -240,9 +245,90 @@ graph_builder.add_conditional_edges(
 )
 graph_builder.add_edge("perform_ticket", "chat_node")
 
+# Initialize PostgreSQL checkpointer
+# For async execution (CopilotKit uses async), we need AsyncPostgresSaver
+# According to LangGraph docs: https://docs.langchain.com/oss/python/langgraph/persistence
+# "For running your graph asynchronously, use AsyncPostgresSaver / AsyncSqliteSaver"
+_checkpointer = None
+_checkpointer_cm = None  # Keep async context manager alive
+
+async def get_checkpointer():
+    """Get PostgreSQL checkpointer from environment variable.
+    
+    Returns AsyncPostgresSaver for async execution (required by CopilotKit).
+    This must be called from an async context (e.g., FastAPI startup event).
+    
+    According to LangGraph docs: https://docs.langchain.com/oss/python/langgraph/persistence
+    "For running your graph asynchronously, use AsyncPostgresSaver / AsyncSqliteSaver"
+    
+    AsyncPostgresSaver.from_conn_string() returns an async context manager.
+    We enter it and keep it alive for the app lifetime.
+    """
+    global _checkpointer, _checkpointer_cm
+    
+    if _checkpointer is not None:
+        return _checkpointer
+    
+    postgres_uri = os.getenv("POSTGRES_URI")
+    if postgres_uri:
+        try:
+            # AsyncPostgresSaver.from_conn_string returns an async context manager
+            # We need to enter it and keep it alive for the app lifetime
+            _checkpointer_cm = AsyncPostgresSaver.from_conn_string(postgres_uri)
+            _checkpointer = await _checkpointer_cm.__aenter__()
+            
+            # Setup tables on first use (creates checkpoint tables if they don't exist)
+            # According to docs: "You need to call checkpointer.setup() the first time"
+            await _checkpointer.setup()
+            
+            logger.info("✅ Using AsyncPostgresSaver for session persistence")
+            return _checkpointer
+        except Exception as e:
+            logger.warning(f"Failed to initialize AsyncPostgresSaver: {e}. Falling back to MemorySaver.")
+            logger.exception(e)
+            from langgraph.checkpoint.memory import MemorySaver
+            _checkpointer = MemorySaver()
+            return _checkpointer
+    else:
+        logger.warning("POSTGRES_URI not set. Using MemorySaver (sessions will not persist).")
+        from langgraph.checkpoint.memory import MemorySaver
+        _checkpointer = MemorySaver()
+        return _checkpointer
+
+def get_checkpointer_sync():
+    """Synchronous fallback for graph compilation at import time.
+    
+    Returns MemorySaver initially, will be replaced by AsyncPostgresSaver
+    in FastAPI startup event.
+    """
+    if _checkpointer is not None:
+        return _checkpointer
+    # Return MemorySaver as fallback - will be replaced by async checkpointer in startup
+    from langgraph.checkpoint.memory import MemorySaver
+    return MemorySaver()
+
 # Compile graph with interrupt for human-in-the-loop
-def build_graph():
-    return graph_builder.compile(
+def build_graph(checkpointer=None):
+    """Build and compile the graph with checkpointer.
+    
+    Args:
+        checkpointer: Optional checkpointer. If None, uses get_checkpointer_sync()
+                     which returns MemorySaver initially, then AsyncPostgresSaver
+                     after async initialization in FastAPI startup.
+    """
+    if checkpointer is None:
+        checkpointer = get_checkpointer_sync()
+    
+    compiled = graph_builder.compile(
         interrupt_after=["ticket_confirmation"],
-        checkpointer=MemorySaver(),
+        checkpointer=checkpointer,
     )
+    checkpointer_type = type(checkpointer).__name__
+    print(f"[BUILD_GRAPH] Graph compiled with checkpointer: {checkpointer_type}")
+    print(f"[BUILD_GRAPH] Checkpointer has aput method: {hasattr(checkpointer, 'aput')}")
+    print(f"[BUILD_GRAPH] Checkpointer has put method: {hasattr(checkpointer, 'put')}")
+    print(f"[BUILD_GRAPH] Checkpointer type: {type(checkpointer)}")
+    print(f"[BUILD_GRAPH] Checkpointer class: {checkpointer.__class__.__name__}")
+    if hasattr(checkpointer, 'conn'):
+        print(f"[BUILD_GRAPH] Checkpointer has conn attribute")
+    return compiled

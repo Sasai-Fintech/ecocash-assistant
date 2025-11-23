@@ -22,6 +22,12 @@ def get_llm():
 async def chat_node(state: AgentState, config: RunnableConfig):
     """Handle chat operations for Ecocash Assistant"""
     
+    # Debug: Log thread_id from config
+    thread_id = config.get("configurable", {}).get("thread_id", "NO_THREAD_ID")
+    print(f"[CHAT_NODE] Executing with thread_id: {thread_id}")
+    print(f"[CHAT_NODE] Full config: {config}")
+    print(f"[CHAT_NODE] Configurable keys: {list(config.get('configurable', {}).keys())}")
+    
     # Get LLM instance (lazy initialization)
     llm = get_llm()
     
@@ -110,6 +116,9 @@ async def chat_node(state: AgentState, config: RunnableConfig):
         ],
         config=config,
     )
+    
+    print(f"[CHAT_NODE] Response received, returning {len([response])} message(s)")
+    print(f"[CHAT_NODE] Config has checkpointer: {config.get('configurable', {}).get('thread_id') is not None}")
 
     return {
         "messages": [response],
