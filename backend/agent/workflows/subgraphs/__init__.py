@@ -1,12 +1,6 @@
-"""LangGraph subgraphs for guided support workflows.
-
-This module provides subgraph implementations for each workflow domain.
-Each subgraph is a compiled LangGraph that can be used as a node in the main graph.
-"""
+"""LangGraph subgraphs for guided support workflows."""
 
 from typing import Optional
-from langgraph.graph import CompiledGraph
-from engine.state import AgentState
 
 # Import subgraph builders
 from .transaction_help_graph import build_transaction_help_subgraph
@@ -36,7 +30,7 @@ def detect_workflow_intent(user_message: str) -> Optional[str]:
     
     return None
 
-def get_workflow_subgraph(workflow_name: str) -> Optional[CompiledGraph]:
+def get_workflow_subgraph(workflow_name: str):
     """
     Get the compiled subgraph for a workflow.
     Returns None if workflow not found.

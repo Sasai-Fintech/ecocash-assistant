@@ -5,10 +5,14 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import AIMessage
 from engine.state import AgentState
 from copilotkit.langgraph import copilotkit_emit_message
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def summarize_loan_node(state: AgentState, config: RunnableConfig):
     """Step 1: Get loan information and summarize."""
+    logger.debug("Loan enquiry subgraph: Starting summarization")
     # Placeholder - in production, call loan tools
     state["loan_context"] = {
         "active_loans": [],
@@ -24,6 +28,12 @@ async def summarize_loan_node(state: AgentState, config: RunnableConfig):
     summary_msg = "I can help you with loan enquiries, applications, and managing your existing loans.\n\nWhat would you like to know about loans?"
     state["messages"].append(AIMessage(content=summary_msg))
     await copilotkit_emit_message(config, summary_msg)
+    
+    # Mark workflow as completed and clear current_workflow
+    state["workflow_step"] = "completed"
+    state["current_workflow"] = None
+    
+    logger.debug("Loan enquiry subgraph: Summarization complete, returning to main graph")
     
     return state
 

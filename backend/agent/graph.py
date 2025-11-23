@@ -10,6 +10,9 @@ from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.runnables import RunnableConfig
 from copilotkit.langgraph import copilotkit_emit_message
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Import Ecocash chat node
 from engine.chat import chat_node
@@ -53,6 +56,7 @@ async def perform_ticket_node(state: AgentState, config: RunnableConfig):
     if tool_message and ai_message:
         # Check if user cancelled
         if tool_message.content == "CANCEL":
+            logger.info("Ticket creation cancelled by user")
             cancel_msg = AIMessage(content="Ticket creation cancelled. Is there anything else I can help you with?")
             state["messages"].append(cancel_msg)
             await copilotkit_emit_message(config, cancel_msg.content)
@@ -60,33 +64,43 @@ async def perform_ticket_node(state: AgentState, config: RunnableConfig):
         
         # User confirmed - proceed with ticket creation
         if tool_message.content == "CONFIRM" or tool_message.content.startswith("CONFIRM"):
-            # Execute the actual ticket creation
-            tool_node = ToolNode([create_ticket])
-            result_state = await tool_node.ainvoke(state, config)
-            
-            # Get the ticket result
-            tool_messages = [msg for msg in result_state.get("messages", []) if isinstance(msg, ToolMessage)]
-            if tool_messages:
-                ticket_result = tool_messages[-1].content
+            logger.info("Ticket creation confirmed, executing create_ticket tool")
+            try:
+                # Execute the actual ticket creation
+                tool_node = ToolNode([create_ticket])
+                result_state = await tool_node.ainvoke(state, config)
                 
-                # Extract ticket ID from the result (format: "Support ticket TICKET-12345 created...")
-                import re
-                ticket_id_match = re.search(r'TICKET-\d+', ticket_result)
-                ticket_id = ticket_id_match.group(0) if ticket_id_match else "N/A"
+                # Get the ticket result
+                tool_messages = [msg for msg in result_state.get("messages", []) if isinstance(msg, ToolMessage)]
+                if tool_messages:
+                    ticket_result = tool_messages[-1].content
+                    
+                    # Extract ticket ID from the result (format: "Support ticket TICKET-12345 created...")
+                    import re
+                    ticket_id_match = re.search(r'TICKET-\d+', ticket_result)
+                    ticket_id = ticket_id_match.group(0) if ticket_id_match else "N/A"
+                    
+                    logger.info(f"Ticket created successfully: {ticket_id}")
+                    
+                    # Create a clear success message with prominent ticket ID
+                    # This helps the suggestions system detect completion and gives user confidence
+                    success_msg = AIMessage(
+                        content=f"✅ Your support request has been successfully submitted!\n\n"
+                               f"📋 Ticket ID: {ticket_id}\n\n"
+                               f"Please save this ticket ID for your records. You can use it to track the status of your request. "
+                               f"Our support team will review your request and get back to you shortly. "
+                               f"Is there anything else I can help you with?"
+                    )
+                    result_state["messages"].append(success_msg)
+                    await copilotkit_emit_message(config, success_msg.content)
                 
-                # Create a clear success message with prominent ticket ID
-                # This helps the suggestions system detect completion and gives user confidence
-                success_msg = AIMessage(
-                    content=f"✅ Your support request has been successfully submitted!\n\n"
-                           f"📋 Ticket ID: {ticket_id}\n\n"
-                           f"Please save this ticket ID for your records. You can use it to track the status of your request. "
-                           f"Our support team will review your request and get back to you shortly. "
-                           f"Is there anything else I can help you with?"
-                )
-                result_state["messages"].append(success_msg)
-                await copilotkit_emit_message(config, success_msg.content)
-            
-            return result_state
+                return result_state
+            except Exception as e:
+                logger.error(f"Failed to create ticket: {e}", exc_info=True)
+                error_msg = AIMessage(content="I encountered an error while creating your ticket. Please try again or contact support directly.")
+                state["messages"].append(error_msg)
+                await copilotkit_emit_message(config, error_msg.content)
+                return state
     
     return state
 
@@ -96,7 +110,9 @@ async def detect_intent_node(state: AgentState, config: RunnableConfig):
     Only detects intent if no workflow is currently active.
     """
     # Only detect intent if no workflow is already active
-    if state.get("current_workflow"):
+    current_workflow = state.get("current_workflow")
+    if current_workflow:
+        logger.debug(f"Intent detection skipped: workflow '{current_workflow}' already active")
         return state
     
     messages = state.get("messages", [])
@@ -112,10 +128,14 @@ async def detect_intent_node(state: AgentState, config: RunnableConfig):
         if last_user_message:
             user_message = str(last_user_message.content) if hasattr(last_user_message, 'content') else ""
             if user_message:
+                logger.debug(f"Detecting workflow intent from user message: {user_message[:100]}...")
                 workflow_name = detect_workflow_intent(user_message)
                 if workflow_name:
+                    logger.info(f"Workflow intent detected: '{workflow_name}'")
                     state["current_workflow"] = workflow_name
                     return state
+                else:
+                    logger.debug("No workflow intent detected, routing to chat_node")
     return state
 
 # ----------------------------------------------------------------------
@@ -131,6 +151,7 @@ graph_builder.add_node("ticket_confirmation", ticket_confirmation_node)
 graph_builder.add_node("perform_ticket", perform_ticket_node)
 
 # Add workflow subgraphs as nodes
+# Compile subgraphs at graph build time (not import time)
 graph_builder.add_node("transaction_help", build_transaction_help_subgraph())
 graph_builder.add_node("refund", build_refund_subgraph())
 graph_builder.add_node("loan_enquiry", build_loan_enquiry_graph())

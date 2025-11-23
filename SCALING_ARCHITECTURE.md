@@ -18,26 +18,22 @@ This document outlines a scalable architecture to handle multiple guided support
 ```
 backend/
 ├── agent/
-│   ├── tools/
-│   │   ├── __init__.py          # Tool registry
-│   │   ├── transactions.py      # Transaction-related tools
-│   │   ├── refunds.py           # Refund-related tools
-│   │   ├── loans.py              # Loan-related tools
-│   │   ├── cards.py              # Card-related tools
-│   │   └── general.py            # General enquiry tools
+│   ├── tools.py                  # All tools (get_balance, list_transactions, create_ticket, etc.)
 │   ├── workflows/
-│   │   ├── __init__.py           # Workflow registry
-│   │   ├── base.py               # Base workflow class
-│   │   ├── transaction_help.py  # Transaction help workflow
-│   │   ├── refund.py             # Refund workflow
-│   │   ├── loan_enquiry.py      # Loan enquiry workflow
-│   │   ├── card_issue.py         # Card issue workflow
-│   │   └── general_enquiry.py   # General enquiry workflow
-│   ├── graph.py                  # Main graph (uses workflow registry)
-│   └── state.py                  # State definitions
+│   │   ├── subgraphs/
+│   │   │   ├── __init__.py           # Subgraph registry and intent detection
+│   │   │   ├── transaction_help_graph.py  # Transaction help subgraph
+│   │   │   ├── refund_graph.py       # Refund subgraph
+│   │   │   ├── loan_enquiry_graph.py # Loan enquiry subgraph
+│   │   │   ├── card_issue_graph.py   # Card issue subgraph
+│   │   │   ├── general_enquiry_graph.py # General enquiry subgraph
+│   │   │   └── shared_nodes.py       # Shared nodes (if any)
+│   │   └── __init__.py
+│   ├── graph.py                 # Main graph (routes to subgraphs)
+│   └── state.py                 # State definitions (in engine/)
 ├── engine/
-│   ├── chat.py                   # Chat node (uses workflow router)
-│   └── workflow_router.py        # Routes to appropriate workflow
+│   ├── chat.py                  # Chat node (LLM processing)
+│   └── state.py                # AgentState definition
 ```
 
 ## Workflow Pattern
@@ -45,13 +41,19 @@ backend/
 Every workflow follows this pattern:
 
 ```
-1. IDENTIFY → Detect intent (transaction help, refund, loan, etc.)
-2. SUMMARIZE → Get relevant context (transaction details, loan status, etc.)
-3. ASK → "Tell us what's wrong" or specific question
-4. SUGGEST → Offer common issues/options
-5. RESOLVE → Provide guidance with actionable steps
-6. ESCALATE → Create ticket only if needed
+1. DETECT INTENT → detect_intent_node identifies workflow from user message
+2. ROUTE TO SUBGRAPH → Main graph routes to appropriate subgraph
+3. SUMMARIZE → Subgraph gets context and provides summary message
+4. RETURN TO CHAT → Subgraph completes, clears current_workflow, returns to chat_node
+5. GUIDANCE → chat_node provides guidance based on system message and context
+6. ESCALATE → Create ticket only if needed (via create_ticket tool)
 ```
+
+**Key Points:**
+- Subgraphs focus on summarization only
+- Guidance logic lives in `chat_node` via system message
+- Subgraphs clear `current_workflow` after completion to allow new intents
+- State context (e.g., `transaction_context`) persists for `chat_node` to use
 
 ## Implementation Plan
 
@@ -74,30 +76,18 @@ Every workflow follows this pattern:
 
 ## Example: Adding a New Workflow
 
-```python
-# backend/agent/workflows/refund.py
-from .base import BaseWorkflow
+See `ADDING_NEW_WORKFLOW.md` for detailed steps. The pattern is:
 
-class RefundWorkflow(BaseWorkflow):
-    name = "refund"
-    intent_keywords = ["refund", "money back", "return payment"]
-    
-    async def summarize(self, state, config):
-        # Get refund-eligible transactions
-        return await get_refund_eligible_transactions(...)
-    
-    def get_suggestions(self):
-        return [
-            "Transaction not received",
-            "Wrong amount charged",
-            "Service not provided",
-            "Cancelled order"
-        ]
-    
-    def get_resolution_guide(self, issue_type):
-        # Return specific guidance based on issue
-        return {...}
-```
+1. Create subgraph file in `backend/agent/workflows/subgraphs/`
+2. Implement `summarize_node` that:
+   - Fetches relevant context
+   - Updates state with workflow context
+   - Emits summary message
+   - Clears `current_workflow` after completion
+3. Register in `subgraphs/__init__.py` (intent detection)
+4. Add to main graph in `graph.py`
+
+**Note**: Guidance is handled in `chat_node` via system message, not in subgraphs.
 
 ## Benefits
 

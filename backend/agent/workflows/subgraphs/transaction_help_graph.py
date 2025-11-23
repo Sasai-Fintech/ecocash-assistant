@@ -1,16 +1,24 @@
 """Transaction help workflow as LangGraph subgraph."""
 
 from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import ToolNode
 from langchain_core.runnables import RunnableConfig
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage
 from engine.state import AgentState
 from agent.tools import get_transaction_details
 from copilotkit.langgraph import copilotkit_emit_message
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def summarize_transaction_node(state: AgentState, config: RunnableConfig):
-    """Step 1: Get transaction details and summarize."""
+    """Step 1: Get transaction details and summarize.
+    
+    This node fetches transaction details, updates state with context,
+    and provides a summary message. After completion, control returns
+    to chat_node for continued conversation and guidance.
+    """
+    logger.debug("Transaction help subgraph: Starting summarization")
     messages = state.get("messages", [])
     transaction_id = ""
     
@@ -26,11 +34,13 @@ async def summarize_transaction_node(state: AgentState, config: RunnableConfig):
     
     # Call tool directly (in production, this would go through ToolNode)
     try:
+        logger.debug(f"Fetching transaction details for ID: {transaction_id}")
         transaction = get_transaction_details.invoke({
             "user_id": state.get("user_id", "demo_user"),
             "transaction_id": transaction_id
         })
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to fetch transaction details: {e}, using fallback")
         # Fallback
         from datetime import datetime, timedelta
         transaction = {
@@ -67,102 +77,27 @@ async def summarize_transaction_node(state: AgentState, config: RunnableConfig):
     state["messages"].append(AIMessage(content=summary_msg))
     await copilotkit_emit_message(config, summary_msg)
     
-    # Clear workflow state after summarization to prevent routing loops
+    # Mark workflow as completed and clear current_workflow to allow new intent detection
     # The workflow context is preserved in transaction_context for chat_node to use
     state["workflow_step"] = "completed"
+    state["current_workflow"] = None  # Clear to allow new workflows
+    
+    logger.debug("Transaction help subgraph: Summarization complete, returning to main graph")
     
     return state
-
-
-async def provide_guidance_node(state: AgentState, config: RunnableConfig):
-    """Step 2: Provide resolution guidance based on issue type."""
-    messages = state.get("messages", [])
-    transaction = state.get("transaction_context", {})
-    
-    # Extract issue from last user message
-    issue_type = ""
-    for msg in reversed(messages):
-        if isinstance(msg, HumanMessage):
-            issue_type = str(msg.content)
-            break
-    
-    # Get guidance based on issue
-    merchant = transaction.get("merchant", "the merchant")
-    reference = transaction.get("reference", "")
-    
-    guides = {
-        "receiver has not received": {
-            "message": f"We hate it when that happens too. Here's what you can do: contact {merchant} with UTR: {reference}. Only the merchant can initiate refunds.",
-            "steps": [f"Contact {merchant} directly", f"Provide UTR: {reference}", "Request payment confirmation or refund"]
-        },
-        "amount debited twice": {
-            "message": f"Check if one transaction is still pending. If both are completed, contact {merchant} with UTR: {reference}.",
-            "steps": ["Check transaction history", "Verify if one is pending", f"If both completed, contact {merchant}"]
-        },
-        "transaction failed": {
-            "message": f"This usually auto-reverses in 24-48 hours. If not, contact {merchant} with UTR: {reference}.",
-            "steps": ["Wait 24-48 hours", f"If not reversed, contact {merchant}", "Provide transaction details"]
-        },
-        "need refund": {
-            "message": f"Contact {merchant} directly with UTR: {reference} to request refund.",
-            "steps": [f"Contact {merchant} customer support", f"Provide UTR: {reference}", "Request refund"]
-        },
-        "wrong amount": {
-            "message": f"Contact {merchant} with UTR: {reference} to dispute the charge.",
-            "steps": [f"Contact {merchant} billing", f"Provide UTR: {reference}", "Request correction"]
-        },
-        "offer not applied": {
-            "message": f"Contact {merchant} or check offer terms. UTR: {reference}",
-            "steps": ["Review offer terms", f"Contact {merchant}", "Verify eligibility"]
-        }
-    }
-    
-    # Find matching guide
-    issue_lower = issue_type.lower()
-    guide = None
-    for key, g in guides.items():
-        if key in issue_lower:
-            guide = g
-            break
-    
-    if not guide:
-        guide = {
-            "message": f"Contact {merchant} with UTR: {reference} for assistance.",
-            "steps": [f"Contact {merchant} customer support", f"Provide UTR: {reference}"]
-        }
-    
-    # Create guidance message
-    guidance_msg = f"{guide['message']}\n\nSteps:\n" + "\n".join(f"{i+1}. {step}" for i, step in enumerate(guide['steps']))
-    
-    state["workflow_step"] = "guided"
-    state["issue_type"] = issue_type
-    state["messages"].append(AIMessage(content=guidance_msg))
-    await copilotkit_emit_message(config, guidance_msg)
-    
-    return state
-
-
-def route_after_guidance(state: AgentState):
-    """Route after providing guidance - check if escalation needed."""
-    messages = state.get("messages", [])
-    last_msg = messages[-1] if messages else None
-    
-    if isinstance(last_msg, HumanMessage):
-        content = str(last_msg.content).lower()
-        # Check if user wants to escalate
-        if any(kw in content for kw in ["create ticket", "raise ticket", "escalate", "not resolved", "still having"]):
-            return "escalate"
-    
-    return END
 
 
 def build_transaction_help_subgraph():
-    """Build and compile the transaction help subgraph."""
+    """Build and compile the transaction help subgraph.
+    
+    This subgraph summarizes the transaction and returns control to chat_node.
+    Guidance is handled in chat_node via the system message, which provides
+    context-aware resolution steps based on the user's issue description.
+    """
     graph = StateGraph(AgentState)
     
     # Add nodes
     graph.add_node("summarize", summarize_transaction_node)
-    graph.add_node("provide_guidance", provide_guidance_node)
     
     # Add edges
     graph.add_edge(START, "summarize")
