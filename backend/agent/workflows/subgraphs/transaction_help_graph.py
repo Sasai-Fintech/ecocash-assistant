@@ -67,6 +67,10 @@ async def summarize_transaction_node(state: AgentState, config: RunnableConfig):
     state["messages"].append(AIMessage(content=summary_msg))
     await copilotkit_emit_message(config, summary_msg)
     
+    # Clear workflow state after summarization to prevent routing loops
+    # The workflow context is preserved in transaction_context for chat_node to use
+    state["workflow_step"] = "completed"
+    
     return state
 
 

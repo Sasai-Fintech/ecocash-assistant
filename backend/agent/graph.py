@@ -92,16 +92,30 @@ async def perform_ticket_node(state: AgentState, config: RunnableConfig):
 
 # Intent detection node
 async def detect_intent_node(state: AgentState, config: RunnableConfig):
-    """Detect which workflow to use based on user message."""
+    """Detect which workflow to use based on user message.
+    Only detects intent if no workflow is currently active.
+    """
+    # Only detect intent if no workflow is already active
+    if state.get("current_workflow"):
+        return state
+    
     messages = state.get("messages", [])
     if messages:
-        last_message = messages[-1]
-        user_message = str(last_message.content) if hasattr(last_message, 'content') else ""
-        if user_message:
-            workflow_name = detect_workflow_intent(user_message)
-            if workflow_name:
-                state["current_workflow"] = workflow_name
-                return state
+        # Get the last user message (HumanMessage)
+        from langchain_core.messages import HumanMessage
+        last_user_message = None
+        for msg in reversed(messages):
+            if isinstance(msg, HumanMessage):
+                last_user_message = msg
+                break
+        
+        if last_user_message:
+            user_message = str(last_user_message.content) if hasattr(last_user_message, 'content') else ""
+            if user_message:
+                workflow_name = detect_workflow_intent(user_message)
+                if workflow_name:
+                    state["current_workflow"] = workflow_name
+                    return state
     return state
 
 # ----------------------------------------------------------------------
@@ -136,19 +150,22 @@ def route_after_chat(state: AgentState):
             # Route to tools for other tools
             return "ecocash_tools"
     
-    # Check if we should route to a workflow subgraph
-    current_workflow = state.get("current_workflow")
-    if current_workflow == "transaction_help":
-        return "transaction_help"
-    
+    # Don't route back to subgraphs from chat_node
+    # Subgraphs are only for initial summarization
+    # After subgraph completes, conversation continues normally in chat_node
     return END
 
 # Define routing logic after intent detection
 def route_after_intent(state: AgentState):
     """Route to appropriate workflow subgraph or continue to chat."""
     current_workflow = state.get("current_workflow")
-    if current_workflow:
+    workflow_step = state.get("workflow_step")
+    
+    # Only route to subgraph if workflow is detected and not yet completed
+    if current_workflow and workflow_step != "completed":
         return current_workflow
+    
+    # Otherwise, go to chat_node
     return "chat_node"
 
 # Define routing logic after ticket confirmation
@@ -163,6 +180,7 @@ def route_after_confirmation(state: AgentState):
     return END
 
 # Add edges
+# Always start with intent detection
 graph_builder.add_edge(START, "detect_intent")
 graph_builder.add_conditional_edges(
     "detect_intent",
@@ -173,10 +191,12 @@ graph_builder.add_conditional_edges(
         "loan_enquiry": "loan_enquiry",
         "card_issue": "card_issue",
         "general_enquiry": "general_enquiry",
-        "chat_node": "chat_node"
+        "chat_node": "chat_node"  # No workflow detected or already processed
     }
 )
 # After workflow subgraphs, continue to chat
+# Subgraphs complete their summarization and pass control to chat_node
+# chat_node will handle the rest of the conversation
 graph_builder.add_edge("transaction_help", "chat_node")
 graph_builder.add_edge("refund", "chat_node")
 graph_builder.add_edge("loan_enquiry", "chat_node")
