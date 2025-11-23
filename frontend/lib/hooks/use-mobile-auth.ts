@@ -39,23 +39,33 @@ export function useMobileAuth(): MobileAuthState & {
 
       // Handle SET_TOKEN message
       if (event.data.type === 'SET_TOKEN') {
-        const { token: newToken, userId: newUserId } = event.data;
-        
-        if (newToken) {
-          setTokenState(newToken);
-          setUserId(newUserId || null);
+        try {
+          const { token: newToken, userId: newUserId } = event.data;
           
-          console.log('[MobileAuth] JWT token received', {
-            hasToken: !!newToken,
-            userId: newUserId,
-            tokenLength: newToken.length,
-          });
-          
-          // Notify Flutter that token was received
-          sendToFlutter({
-            type: 'TOKEN_RECEIVED',
-            success: true,
-          });
+          if (newToken && typeof newToken === 'string' && newToken.length > 0) {
+            setTokenState(newToken);
+            setUserId(newUserId || null);
+            
+            console.log('[MobileAuth] JWT token received', {
+              hasToken: !!newToken,
+              userId: newUserId,
+              tokenLength: newToken.length,
+            });
+            
+            // Notify Flutter that token was received
+            try {
+              sendToFlutter({
+                type: 'TOKEN_RECEIVED',
+                success: true,
+              });
+            } catch (error) {
+              console.warn('[MobileAuth] Failed to notify Flutter:', error);
+            }
+          } else {
+            console.warn('[MobileAuth] Invalid token format received');
+          }
+        } catch (error) {
+          console.error('[MobileAuth] Error processing SET_TOKEN message:', error);
         }
       }
     };

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotChat, useCopilotChatSuggestions } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
@@ -75,12 +76,36 @@ function SuggestionsComponent() {
   return null; // Suggestions are automatically rendered by CopilotKit
 }
 
+// Chat component that conditionally shows initial greeting based on mobile context
+function ChatWithContext() {
+  // Get context to check if we should skip the greeting
+  const { context } = useMobileContext();
+  
+  // Always use empty initial message to avoid hydration errors
+  // This ensures server and client render consistently
+  // When transaction context is provided via postMessage, the agent will respond immediately
+  // For regular web users, they can start typing and the conversation begins naturally
+  const initialMessage = "";
+  
+  return (
+    <CopilotChat
+      className="h-full border-0 rounded-2xl shadow-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm"
+      instructions="You are the Ecocash Assistant, a helpful and friendly AI financial companion. Help users with their wallet balance, transaction history, and support tickets. Be proactive and suggest helpful actions when appropriate."
+      labels={{
+        title: "How can we help you today?",
+        // Always use empty to avoid hydration mismatch between server and client
+        // Transaction context will trigger agent response automatically
+        initial: initialMessage,
+        placeholder: "Type your message...",
+      }}
+    />
+  );
+}
+
 export default function Home() {
   // Get JWT token from Flutter WebView (via postMessage)
+  // This hook doesn't require CopilotKit, so it can be called outside
   const { token, userId, isAuthenticated } = useMobileAuth();
-  
-  // Get context from Flutter (transaction help, etc.)
-  useMobileContext();
 
   // Build properties for CopilotKit with auth headers
   // Following CopilotKit's self-hosted auth pattern: https://docs.copilotkit.ai/langgraph/auth
@@ -127,15 +152,7 @@ export default function Home() {
             <div className="h-full flex flex-col gap-4">
               {/* Chat */}
               <div className="flex-1 min-h-0">
-                <CopilotChat
-                  className="h-full border-0 rounded-2xl shadow-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm"
-                  instructions="You are the Ecocash Assistant, a helpful and friendly AI financial companion. Help users with their wallet balance, transaction history, and support tickets. Be proactive and suggest helpful actions when appropriate."
-                  labels={{
-                    title: "How can we help you today?",
-                    initial: "Hello! I can help you check your balance, view transactions, or raise a support ticket. How can I help?",
-                    placeholder: "Type your message...",
-                  }}
-                />
+                <ChatWithContext />
               </div>
             </div>
           </div>

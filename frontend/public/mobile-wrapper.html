@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoCash Mobile Test Wrapper</title>
+    <title>EcoCash Assistant</title>
     <style>
         * {
             margin: 0;
@@ -12,166 +12,10 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header h1 {
-            font-size: 20px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .header p {
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-height: 40vh;
-            overflow-y: auto;
-        }
-        
-        .control-section {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .control-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        
-        .control-section h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-            background: #667eea;
-            color: white;
-        }
-        
-        .input-group {
-            margin-bottom: 10px;
-        }
-        
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 500;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        
-        .input-group input,
-        .input-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: 'Courier New', monospace;
-            transition: border-color 0.2s;
-        }
-        
-        .input-group input:focus,
-        .input-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .input-group textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-        
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            margin-top: 5px;
-        }
-        
-        button:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        button.secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-        
-        button.secondary:hover {
-            background: #e5e7eb;
-        }
-        
-        .status {
-            background: #f0fdf4;
-            border-left: 3px solid #22c55e;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #166534;
-            display: none;
-        }
-        
-        .status.show {
-            display: block;
-        }
-        
-        .status.error {
-            background: #fef2f2;
-            border-left-color: #ef4444;
-            color: #991b1b;
-        }
-        
-        .iframe-container {
-            flex: 1;
-            margin: 0 15px 15px 15px;
-            border-radius: 12px;
+            width: 100vw;
             overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-            background: white;
+            background: #000;
         }
         
         iframe {
@@ -180,199 +24,86 @@
             border: none;
             display: block;
         }
-        
-        .code-hint {
-            font-size: 11px;
-            color: #6b7280;
-            margin-top: 3px;
-            font-style: italic;
-        }
-        
-        @media (max-width: 768px) {
-            .controls {
-                max-height: 35vh;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🧪 EcoCash Mobile Test Wrapper</h1>
-        <p>Simulates Flutter WebView postMessage communication</p>
-    </div>
-    
-    <div class="controls">
-        <!-- Authentication Section -->
-        <div class="control-section">
-            <h3>
-                🔐 Authentication
-                <span class="badge">Step 1</span>
-            </h3>
-            <div class="input-group">
-                <label for="jwt-token">JWT Token</label>
-                <textarea 
-                    id="jwt-token" 
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                >eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGVtb191c2VyIiwiZW1haWwiOiJkZW1vQGVjb2Nhc2guY29tIiwicm9sZSI6InVzZXIiLCJleHAiOjE3MzUwMDAwMDB9.dummySignatureForTestingOnly</textarea>
-                <p class="code-hint">Example JWT token for testing</p>
-            </div>
-            <div class="input-group">
-                <label for="user-id">User ID</label>
-                <input type="text" id="user-id" value="demo_user" placeholder="user_12345">
-            </div>
-            <button onclick="sendToken()">📤 Send JWT Token</button>
-            <div id="token-status" class="status"></div>
-        </div>
-        
-        <!-- Context Section -->
-        <div class="control-section">
-            <h3>
-                📦 User Context
-                <span class="badge">Step 2</span>
-            </h3>
-            <div class="input-group">
-                <label for="device-info">Device Info (JSON)</label>
-                <textarea 
-                    id="device-info" 
-                    placeholder='{"platform": "android", "version": "12"}'
-                >{"platform": "android", "device": "Pixel 6", "app_version": "2.5.0"}</textarea>
-            </div>
-            <button onclick="sendContext()">📤 Send Context</button>
-            <div id="context-status" class="status"></div>
-        </div>
-        
-        <!-- Transaction Help Flow -->
-        <div class="control-section">
-            <h3>
-                🎯 Transaction Help Flow
-                <span class="badge">Demo</span>
-            </h3>
-            <div class="input-group">
-                <label for="transaction-id">Transaction ID</label>
-                <input type="text" id="transaction-id" value="txn_1" placeholder="txn_12345">
-            </div>
-            <button onclick="triggerTransactionHelp()">🆘 Trigger Transaction Help</button>
-            <div id="transaction-status" class="status"></div>
-        </div>
-        
-        <!-- Quick Actions -->
-        <div class="control-section">
-            <h3>⚡ Quick Actions</h3>
-            <button onclick="sendAll()" style="background: #059669;">🚀 Send All (Token + Context)</button>
-            <button onclick="clearStatus()" class="secondary">🧹 Clear Status Messages</button>
-        </div>
-    </div>
-    
-    <div class="iframe-container">
-        <iframe id="app-iframe" src="http://localhost:3000"></iframe>
-    </div>
+    <iframe id="app-iframe" src="http://localhost:3000"></iframe>
     
     <script>
         const iframe = document.getElementById('app-iframe');
         
-        // Wait for iframe to load
+        // Extract parameters from URL (simulating Flutter passing data)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const userId = urlParams.get('userId') || urlParams.get('user_id');
+        const transactionId = urlParams.get('transactionId') || urlParams.get('transaction_id');
+        const contextParam = urlParams.get('context');
+        
+        // Wait for iframe to load before sending messages
         iframe.addEventListener('load', function() {
             console.log('✅ EcoCash Assistant loaded in iframe');
-            showStatus('token-status', 'EcoCash Assistant UI loaded. Ready to send messages.', false);
-        });
-        
-        function showStatus(elementId, message, isError = false) {
-            const statusElement = document.getElementById(elementId);
-            statusElement.textContent = message;
-            statusElement.className = isError ? 'status show error' : 'status show';
             
-            console.log(isError ? '❌' : '✅', message);
-        }
-        
-        function clearStatus() {
-            const statusElements = document.querySelectorAll('.status');
-            statusElements.forEach(el => el.classList.remove('show'));
-        }
-        
-        function sendToken() {
-            const token = document.getElementById('jwt-token').value.trim();
-            const userId = document.getElementById('user-id').value.trim();
-            
-            if (!token) {
-                showStatus('token-status', 'Error: JWT token is required', true);
-                return;
-            }
-            
-            const message = {
-                type: 'SET_TOKEN',
-                token: token,
-                userId: userId || 'demo_user',
-                timestamp: Date.now()
-            };
-            
-            iframe.contentWindow.postMessage(message, '*');
-            showStatus('token-status', `JWT token sent successfully (User: ${message.userId})`, false);
-        }
-        
-        function sendContext() {
-            try {
-                const deviceInfo = document.getElementById('device-info').value.trim();
-                const context = JSON.parse(deviceInfo || '{}');
+            // Wait a bit longer to ensure React and CopilotKit are fully initialized
+            setTimeout(() => {
+                // Send JWT token if provided via URL, otherwise use default for testing
+                const tokenToSend = token ? decodeURIComponent(token) : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGVtb191c2VyIiwiZW1haWwiOiJkZW1vQGVjb2Nhc2guY29tIiwicm9sZSI6InVzZXIiLCJleHAiOjE3MzUwMDAwMDB9.dummySignatureForTestingOnly';
+                const userIdToSend = userId ? decodeURIComponent(userId) : 'demo_user';
                 
-                const message = {
-                    type: 'SET_CONTEXT',
-                    context: {
-                        ...context,
-                        channel: 'mobile',
-                        timestamp: Date.now()
-                    }
+                const tokenMessage = {
+                    type: 'SET_TOKEN',
+                    token: tokenToSend,
+                    userId: userIdToSend,
+                    timestamp: Date.now()
                 };
                 
-                iframe.contentWindow.postMessage(message, '*');
-                showStatus('context-status', 'User context sent successfully', false);
-            } catch (error) {
-                showStatus('context-status', `Error: Invalid JSON format - ${error.message}`, true);
-            }
-        }
-        
-        function triggerTransactionHelp() {
-            const transactionId = document.getElementById('transaction-id').value.trim();
-            
-            if (!transactionId) {
-                showStatus('transaction-status', 'Error: Transaction ID is required', true);
-                return;
-            }
-            
-            const message = {
-                type: 'TRANSACTION_HELP',
-                transactionId: transactionId,
-                timestamp: Date.now()
-            };
-            
-            iframe.contentWindow.postMessage(message, '*');
-            showStatus('transaction-status', `Transaction help triggered for: ${transactionId}`, false);
-        }
-        
-        function sendAll() {
-            sendToken();
-            setTimeout(() => sendContext(), 200);
-            setTimeout(() => {
-                showStatus('transaction-status', 'All messages sent. You can now trigger transaction help or interact with the chat.', false);
-            }, 400);
-        }
+                iframe.contentWindow.postMessage(tokenMessage, '*');
+                console.log('📤 JWT token sent to widget', token ? '(from URL)' : '(default for testing)');
+                
+                // Send context if provided
+                if (contextParam) {
+                    try {
+                        const context = JSON.parse(decodeURIComponent(contextParam));
+                        const contextMessage = {
+                            type: 'SET_CONTEXT',
+                            context: {
+                                ...context,
+                                channel: 'mobile',
+                                timestamp: Date.now()
+                            }
+                        };
+                        
+                        iframe.contentWindow.postMessage(contextMessage, '*');
+                        console.log('📤 Context sent to widget');
+                    } catch (error) {
+                        console.error('❌ Error parsing context JSON:', error);
+                    }
+                }
+                
+                // Trigger transaction help if transaction ID provided
+                // Wait longer to ensure CopilotKit is fully initialized
+                if (transactionId) {
+                    setTimeout(() => {
+                        const transactionMessage = {
+                            type: 'TRANSACTION_HELP',
+                            transactionId: decodeURIComponent(transactionId),
+                            timestamp: Date.now()
+                        };
+                        
+                        iframe.contentWindow.postMessage(transactionMessage, '*');
+                        console.log('📤 Transaction help triggered:', transactionMessage.transactionId);
+                    }, 1500); // Increased delay to ensure CopilotKit is ready
+                }
+            }, 1000); // Increased initial delay
+        });
         
         // Listen for messages from iframe (for future bidirectional communication)
         window.addEventListener('message', function(event) {
             // Security: In production, verify event.origin
             if (event.data && event.data.type === 'NAVIGATE') {
                 console.log('🔗 Navigation request from UI:', event.data);
-                alert(`Navigation request: ${event.data.route || 'unknown'}`);
+                // In Flutter, this would trigger native navigation
             }
         });
-        
-        // Auto-send token on load (for quick testing)
-        setTimeout(() => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('autoload') === 'true') {
-                sendAll();
-            }
-        }, 1500);
     </script>
 </body>
 </html>
-
