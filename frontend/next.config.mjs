@@ -1,12 +1,4 @@
-/** @type {import("next").NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  experimental: {
-    turbo: {
-      rules: {}
-    }
-  }
-};
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
 
 export default nextConfig;
-

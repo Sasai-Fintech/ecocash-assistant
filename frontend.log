@@ -1,0 +1,79 @@
+
+> frontend@0.1.0 dev
+> next dev
+
+   ▲ Next.js 16.0.3 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.1.101:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling / ...
+ GET / 200 in 12.3s (compile: 10.8s, render: 1452ms)
+ ○ Compiling /api/copilotkit ...
+ GET / 200 in 275ms (compile: 10ms, render: 265ms)
+Application error: GraphQLError: Failed to fetch CopilotKit agents/action information from url http://localhost:8000/copilotkit/info..
+
+Possible reasons:
+- -The server may have an error preventing it from returning a response (Check the server logs for more info).
+- -The server might be down or unreachable
+- -There might be a network issue (e.g., DNS failure, connection timeout) 
+- -The URL might be incorrect
+- -The server is not running on the specified port
+
+See more: [https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found](https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found)
+    at ignore-listed frames {
+  path: [Array],
+  locations: [Array],
+  extensions: [Object]
+}
+ POST /api/copilotkit 200 in 20.6s (compile: 12.5s, render: 8.1s)
+Application error: GraphQLError: Failed to fetch CopilotKit agents/action information from url http://localhost:8000/copilotkit/info..
+
+Possible reasons:
+- -The server may have an error preventing it from returning a response (Check the server logs for more info).
+- -The server might be down or unreachable
+- -There might be a network issue (e.g., DNS failure, connection timeout) 
+- -The URL might be incorrect
+- -The server is not running on the specified port
+
+See more: [https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found](https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found)
+    at ignore-listed frames {
+  path: [Array],
+  locations: [Array],
+  extensions: [Object]
+}
+ POST /api/copilotkit 200 in 20.9s (compile: 12.7s, render: 8.2s)
+Application error: GraphQLError: Failed to fetch CopilotKit agents/action information from url http://localhost:8000/copilotkit/info..
+
+Possible reasons:
+- -The server may have an error preventing it from returning a response (Check the server logs for more info).
+- -The server might be down or unreachable
+- -There might be a network issue (e.g., DNS failure, connection timeout) 
+- -The URL might be incorrect
+- -The server is not running on the specified port
+
+See more: [https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found](https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found)
+    at ignore-listed frames {
+  path: [Array],
+  locations: [Array],
+  extensions: [Object]
+}
+ POST /api/copilotkit 200 in 7.4s (compile: 52ms, render: 7.4s)
+Application error: GraphQLError: Failed to fetch CopilotKit agents/action information from url http://localhost:8000/copilotkit/info..
+
+Possible reasons:
+- -The server may have an error preventing it from returning a response (Check the server logs for more info).
+- -The server might be down or unreachable
+- -There might be a network issue (e.g., DNS failure, connection timeout) 
+- -The URL might be incorrect
+- -The server is not running on the specified port
+
+See more: [https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found](https://docs.copilotkit.ai/troubleshooting/common-issues#i-am-getting-a-network-errors--api-not-found)
+    at ignore-listed frames {
+  path: [Array],
+  locations: [Array],
+  extensions: [Object]
+}
+ POST /api/copilotkit 200 in 7.6s (compile: 161ms, render: 7.5s)
