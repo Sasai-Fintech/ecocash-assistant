@@ -36,6 +36,12 @@ This PR implements Flutter WebView integration for the EcoCash Assistant, enabli
 - Mobile integration guide for Flutter developers
 - Removed outdated and temporary documentation files
 
+### 🎨 UI/UX Improvements
+- Added EcoCash logo to header (centered, prominently displayed)
+- Removed redundant "EcoCash Assistant" heading text
+- Optimized header layout to prevent unnecessary width expansion
+- Improved visual branding with larger, centered logo
+
 ## Technical Changes
 
 ### Frontend
@@ -44,9 +50,10 @@ This PR implements Flutter WebView integration for the EcoCash Assistant, enabli
   - `frontend/lib/hooks/use-mobile-context.ts` - Context management hook
   - `frontend/lib/mobile-bridge.ts` - TypeScript types for mobile communication
   - `frontend/public/mobile-wrapper.html` - Testing wrapper for WebView simulation
+  - `frontend/public/ecocashlogo.png` - EcoCash brand logo
 
 - **Modified Files:**
-  - `frontend/app/page.tsx` - Integrated mobile hooks, fixed hydration issues
+  - `frontend/app/page.tsx` - Integrated mobile hooks, fixed hydration issues, added centered logo
   - `frontend/app/api/copilotkit/route.ts` - Header forwarding for JWT
   - `frontend/components/widgets/*` - Mobile responsiveness improvements
 
