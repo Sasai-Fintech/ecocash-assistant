@@ -16,7 +16,7 @@ from engine.chat import chat_node
 from engine.state import AgentState
 
 # Import Ecocash tools
-from agent.tools import get_balance, list_transactions, create_ticket
+from agent.tools import get_balance, list_transactions, create_ticket, get_transaction_details
 
 # Node for ticket confirmation (human-in-the-loop)
 async def ticket_confirmation_node(state: AgentState, config: RunnableConfig):
@@ -60,7 +60,21 @@ async def perform_ticket_node(state: AgentState, config: RunnableConfig):
             tool_messages = [msg for msg in result_state.get("messages", []) if isinstance(msg, ToolMessage)]
             if tool_messages:
                 ticket_result = tool_messages[-1].content
-                success_msg = AIMessage(content=ticket_result)
+                
+                # Extract ticket ID from the result (format: "Support ticket TICKET-12345 created...")
+                import re
+                ticket_id_match = re.search(r'TICKET-\d+', ticket_result)
+                ticket_id = ticket_id_match.group(0) if ticket_id_match else "N/A"
+                
+                # Create a clear success message with prominent ticket ID
+                # This helps the suggestions system detect completion and gives user confidence
+                success_msg = AIMessage(
+                    content=f"✅ Your support request has been successfully submitted!\n\n"
+                           f"📋 Ticket ID: {ticket_id}\n\n"
+                           f"Please save this ticket ID for your records. You can use it to track the status of your request. "
+                           f"Our support team will review your request and get back to you shortly. "
+                           f"Is there anything else I can help you with?"
+                )
                 result_state["messages"].append(success_msg)
                 await copilotkit_emit_message(config, success_msg.content)
             
@@ -75,7 +89,7 @@ graph_builder = StateGraph(AgentState)
 
 # Add nodes
 graph_builder.add_node("chat_node", chat_node)
-graph_builder.add_node("ecocash_tools", ToolNode([get_balance, list_transactions, create_ticket]))
+graph_builder.add_node("ecocash_tools", ToolNode([get_balance, list_transactions, create_ticket, get_transaction_details]))
 graph_builder.add_node("ticket_confirmation", ticket_confirmation_node)
 graph_builder.add_node("perform_ticket", perform_ticket_node)
 
