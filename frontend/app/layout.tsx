@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "EcoCash Assistant",
   description: "Your AI Financial Companion",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

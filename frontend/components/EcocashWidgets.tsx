@@ -5,6 +5,9 @@ import { BalanceCard } from "@/components/widgets/BalanceCard";
 import { TransactionGrid } from "@/components/widgets/TransactionGrid";
 import { TicketConfirmation } from "@/components/widgets/TicketConfirmation";
 import { Transaction } from "@/components/widgets/TransactionCard";
+import { FinancialInsightsChart } from "@/components/widgets/FinancialInsightsChart";
+import { CashFlowBarChart } from "@/components/widgets/CashFlowBarChart";
+import { FinancialInsights, CashFlowOverview } from "@ecocash/schemas";
 
 /**
  * Registers CopilotKit actions for rendering widgets inline in chat.
@@ -264,6 +267,182 @@ export function EcocashWidgets() {
           handler={handler}
         />
       );
+    },
+  });
+
+  // Register action for cash flow overview widget (bar chart)
+  useCopilotAction({
+    name: "get_cash_flow_overview",
+    description: "Get overall cash flow overview with incoming, investment, and spends totals",
+    parameters: [
+      {
+        name: "user_id",
+        type: "string",
+        description: "The user ID",
+        required: true,
+      },
+      {
+        name: "account",
+        type: "string",
+        description: "Account filter (e.g., 'all accounts')",
+        required: false,
+      },
+      {
+        name: "start_date",
+        type: "string",
+        description: "Start date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+      {
+        name: "end_date",
+        type: "string",
+        description: "End date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+    ],
+    render: ({ args, result, status }) => {
+      if (status !== "complete") {
+        return (
+          <div className="bg-indigo-100 text-indigo-700 p-4 rounded-lg max-w-md">
+            <span className="animate-pulse">⚙️ Loading cash flow overview...</span>
+          </div>
+        );
+      }
+
+      const overview = result as CashFlowOverview;
+      return <CashFlowBarChart overview={overview} />;
+    },
+  });
+
+  // Register action for incoming insights widget
+  useCopilotAction({
+    name: "get_incoming_insights",
+    description: "Get financial insights for incoming transactions",
+    parameters: [
+      {
+        name: "user_id",
+        type: "string",
+        description: "The user ID",
+        required: true,
+      },
+      {
+        name: "account",
+        type: "string",
+        description: "Account filter (e.g., 'all accounts')",
+        required: false,
+      },
+      {
+        name: "start_date",
+        type: "string",
+        description: "Start date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+      {
+        name: "end_date",
+        type: "string",
+        description: "End date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+    ],
+    render: ({ args, result, status }) => {
+      if (status !== "complete") {
+        return (
+          <div className="bg-indigo-100 text-indigo-700 p-4 rounded-lg max-w-md">
+            <span className="animate-pulse">⚙️ Analyzing incoming transactions...</span>
+          </div>
+        );
+      }
+
+      const insights = result as FinancialInsights;
+      return <FinancialInsightsChart insights={insights} />;
+    },
+  });
+
+  // Register action for investment insights widget
+  useCopilotAction({
+    name: "get_investment_insights",
+    description: "Get financial insights for investment transactions",
+    parameters: [
+      {
+        name: "user_id",
+        type: "string",
+        description: "The user ID",
+        required: true,
+      },
+      {
+        name: "account",
+        type: "string",
+        description: "Account filter (e.g., 'all accounts')",
+        required: false,
+      },
+      {
+        name: "start_date",
+        type: "string",
+        description: "Start date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+      {
+        name: "end_date",
+        type: "string",
+        description: "End date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+    ],
+    render: ({ args, result, status }) => {
+      if (status !== "complete") {
+        return (
+          <div className="bg-indigo-100 text-indigo-700 p-4 rounded-lg max-w-md">
+            <span className="animate-pulse">⚙️ Analyzing investments...</span>
+          </div>
+        );
+      }
+
+      const insights = result as FinancialInsights;
+      return <FinancialInsightsChart insights={insights} />;
+    },
+  });
+
+  // Register action for spends insights widget
+  useCopilotAction({
+    name: "get_spends_insights",
+    description: "Get financial insights for spending transactions",
+    parameters: [
+      {
+        name: "user_id",
+        type: "string",
+        description: "The user ID",
+        required: true,
+      },
+      {
+        name: "account",
+        type: "string",
+        description: "Account filter (e.g., 'all accounts')",
+        required: false,
+      },
+      {
+        name: "start_date",
+        type: "string",
+        description: "Start date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+      {
+        name: "end_date",
+        type: "string",
+        description: "End date for the period (YYYY-MM-DD)",
+        required: false,
+      },
+    ],
+    render: ({ args, result, status }) => {
+      if (status !== "complete") {
+        return (
+          <div className="bg-indigo-100 text-indigo-700 p-4 rounded-lg max-w-md">
+            <span className="animate-pulse">⚙️ Analyzing spending patterns...</span>
+          </div>
+        );
+      }
+
+      const insights = result as FinancialInsights;
+      return <FinancialInsightsChart insights={insights} />;
     },
   });
 

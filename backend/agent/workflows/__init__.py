@@ -14,6 +14,7 @@ from .refund import RefundWorkflow
 from .loan_enquiry import LoanEnquiryWorkflow
 from .card_issue import CardIssueWorkflow
 from .general_enquiry import GeneralEnquiryWorkflow
+from .financial_insights import FinancialInsightsWorkflow
 
 # Workflow registry
 _workflows: Dict[str, Type[BaseWorkflow]] = {}
@@ -42,6 +43,7 @@ def detect_workflow(user_message: str) -> Optional[str]:
     # Check workflows in priority order (most specific first)
     priority_order = [
         TransactionHelpWorkflow,
+        FinancialInsightsWorkflow,
         RefundWorkflow,
         LoanEnquiryWorkflow,
         CardIssueWorkflow,
@@ -64,6 +66,7 @@ def _register_all_workflows():
         LoanEnquiryWorkflow,
         CardIssueWorkflow,
         GeneralEnquiryWorkflow,
+        FinancialInsightsWorkflow,
     ]
     
     for workflow_class in workflows:

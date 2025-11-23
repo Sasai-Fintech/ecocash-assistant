@@ -65,10 +65,17 @@ function SuggestionsComponent() {
     
     8. If the conversation shows the ticket is already processed/completed, suggest new actions, not confirmation actions
     
-    9. Otherwise, suggest common actions like "Check my wallet balance", "View recent transactions", or "Get support"
+    9. If user asks about financial insights, analysis, or wants to see spending/incoming/investment breakdown, suggest:
+       - "Show cash flow" (for overview bar chart)
+       - "Analyze incoming" (for detailed incoming breakdown)
+       - "Analyze spends" (for detailed spending breakdown)
+       - "Analyze investment" (for detailed investment breakdown)
+    
+    10. Otherwise, suggest common actions like "Check my wallet balance", "View recent transactions", "Show financial insights", or "Get support"
     
     Always check the last AI message - if it mentions "successfully submitted", "has been submitted", "ticket created", or similar completion phrases, do NOT suggest confirmation actions.
     If AI asks "what's wrong" or "what issue", provide issue-specific suggestions, not generic ones.
+    If AI mentions financial insights or analysis, provide financial insights suggestions.
     Keep suggestions concise (2-5 words), actionable, and relevant to the current conversation context.`,
     minSuggestions: 2,
     maxSuggestions: 4,
@@ -82,22 +89,19 @@ function ChatWithContext() {
   // Get context to check if we should skip the greeting
   const { context } = useMobileContext();
   
-  // Always use empty initial message to avoid hydration errors
-  // This ensures server and client render consistently
+  // Use welcome message as initial - CopilotKit will handle it properly
   // When transaction context is provided via postMessage, the agent will respond immediately
-  // For regular web users, they can start typing and the conversation begins naturally
-  const initialMessage = "";
+  // For regular web users, they'll see the welcome message
+  const initialMessage = "How can I help you today?";
   
   return (
     <CopilotChat
       className="h-full border-0 rounded-2xl shadow-xl bg-white/95 dark:bg-zinc-800/95 backdrop-blur-sm"
-      instructions="You are the Ecocash Assistant, a helpful and friendly AI financial companion. Help users with their wallet balance, transaction history, and support tickets. Be proactive and suggest helpful actions when appropriate."
+      instructions="You are the Ecocash Assistant, a helpful and friendly AI financial companion. Help users with their wallet balance, transaction history, and support tickets. Be proactive and suggest helpful actions when appropriate. When starting a new conversation, greet the user with 'How can I help you today?'"
       labels={{
-        title: "How can we help you today?",
-        // Always use empty to avoid hydration mismatch between server and client
-        // Transaction context will trigger agent response automatically
-        initial: initialMessage,
-        placeholder: "Type your message...",
+        title: "What's on your mind today?",
+        initial: "",
+        placeholder: "Ask anything",
       }}
     />
   );
@@ -139,6 +143,7 @@ export default function Home() {
                   src="/ecocashlogo.png"
                   alt="EcoCash Logo"
                   fill
+                  sizes="(max-width: 640px) 256px, 320px"
                   className="object-contain"
                   priority
                 />

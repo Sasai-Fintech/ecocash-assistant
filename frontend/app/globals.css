@@ -108,6 +108,75 @@
   @apply rounded-2xl shadow-xl;
 }
 
+/* Markdown Table Styling in Chat Messages */
+.copilotKitChat table,
+.copilotKitMessage table,
+[data-copilot-chat-message] table {
+  @apply w-full border-collapse my-4 !important;
+  @apply border border-gray-300 dark:border-zinc-600 !important;
+  @apply bg-white dark:bg-zinc-800 !important;
+  @apply rounded-lg overflow-hidden !important;
+}
+
+.copilotKitChat table thead,
+.copilotKitMessage table thead,
+[data-copilot-chat-message] table thead {
+  @apply bg-gray-50 dark:bg-zinc-700 !important;
+}
+
+.copilotKitChat table th,
+.copilotKitMessage table th,
+[data-copilot-chat-message] table th {
+  @apply border border-gray-300 dark:border-zinc-600 !important;
+  @apply px-4 py-2 text-left font-semibold !important;
+  @apply text-gray-900 dark:text-gray-100 !important;
+}
+
+.copilotKitChat table td,
+.copilotKitMessage table td,
+[data-copilot-chat-message] table td {
+  @apply border border-gray-300 dark:border-zinc-600 !important;
+  @apply px-4 py-2 !important;
+  @apply text-gray-700 dark:text-gray-300 !important;
+}
+
+.copilotKitChat table tbody tr:hover,
+.copilotKitMessage table tbody tr:hover,
+[data-copilot-chat-message] table tbody tr:hover {
+  @apply bg-gray-50 dark:bg-zinc-700/50 !important;
+}
+
+.copilotKitChat table tbody tr:nth-child(even),
+.copilotKitMessage table tbody tr:nth-child(even),
+[data-copilot-chat-message] table tbody tr:nth-child(even) {
+  @apply bg-gray-50/50 dark:bg-zinc-800/50 !important;
+}
+
+/* ChatGPT-like Welcome Message Styling */
+.copilotKitChat h2,
+.copilotKitChat [class*="title"],
+.copilotKitChat [class*="Title"] {
+  @apply text-center text-gray-700 dark:text-gray-300 !important;
+  @apply text-lg font-normal !important;
+  @apply mb-6 mt-8 !important;
+  @apply px-4 !important;
+}
+
+/* Input field styling - ChatGPT-like rounded input */
+.copilotKitChat input[type="text"],
+.copilotKitChat textarea {
+  @apply rounded-full !important;
+  @apply border border-gray-300 dark:border-zinc-600 !important;
+  @apply bg-white dark:bg-zinc-800 !important;
+  @apply px-4 py-3 !important;
+  @apply text-gray-900 dark:text-gray-100 !important;
+}
+
+.copilotKitChat input[type="text"]::placeholder,
+.copilotKitChat textarea::placeholder {
+  @apply text-gray-500 dark:text-gray-400 !important;
+}
+
 /* CopilotKit Suggestions Styling */
 .copilotKitSuggestions {
   @apply flex gap-2 overflow-x-auto pb-2;
