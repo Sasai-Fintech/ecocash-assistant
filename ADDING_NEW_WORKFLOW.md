@@ -1,6 +1,8 @@
-# How to Add a New Workflow
+# How to Add a New Workflow (LangGraph Subgraph Approach)
 
-This guide shows you how to add a new guided support workflow to the system.
+This guide shows you how to add a new guided support workflow using LangGraph subgraphs.
+
+**Note**: This is the updated approach using LangGraph subgraphs. For the older class-based approach, see the git history.
 
 ## Step-by-Step Guide
 

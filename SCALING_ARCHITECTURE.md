@@ -2,15 +2,16 @@
 
 ## Overview
 
-This document outlines a scalable architecture to handle multiple guided support workflows (refunds, loans, cards, general enquiries, etc.) while maintaining code organization and reusability.
+This document outlines a scalable architecture to handle multiple guided support workflows (refunds, loans, cards, general enquiries, etc.) using **LangGraph subgraphs** for native state management and better scalability.
 
 ## Architecture Principles
 
-1. **Modular Workflows**: Each workflow is self-contained in its own module
-2. **Reusable Components**: Common patterns (summarize → identify → resolve → escalate) are reusable
-3. **Workflow Registry**: Central registry to manage and route to different workflows
-4. **Tool Organization**: Tools grouped by domain (transactions, loans, cards, etc.)
-5. **State Management**: Workflow state tracked separately from conversation state
+1. **LangGraph Subgraphs**: Each workflow is a compiled LangGraph subgraph
+2. **Native State Management**: State persists across workflow steps with checkpointing
+3. **Visual Debugging**: View workflow execution in LangGraph Studio
+4. **Modular Design**: Each workflow is self-contained in its own subgraph
+5. **Tool Integration**: Tools accessible from any subgraph node
+6. **Conditional Routing**: Main graph routes to appropriate subgraph based on intent
 
 ## Directory Structure
 

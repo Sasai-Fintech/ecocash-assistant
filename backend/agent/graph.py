@@ -18,6 +18,14 @@ from engine.state import AgentState
 # Import Ecocash tools
 from agent.tools import get_balance, list_transactions, create_ticket, get_transaction_details
 
+# Import workflow subgraphs
+from agent.workflows.subgraphs import detect_workflow_intent, get_workflow_subgraph
+from agent.workflows.subgraphs.transaction_help_graph import build_transaction_help_subgraph
+from agent.workflows.subgraphs.refund_graph import build_refund_subgraph
+from agent.workflows.subgraphs.loan_enquiry_graph import build_loan_enquiry_graph
+from agent.workflows.subgraphs.card_issue_graph import build_card_issue_subgraph
+from agent.workflows.subgraphs.general_enquiry_graph import build_general_enquiry_subgraph
+
 # Node for ticket confirmation (human-in-the-loop)
 async def ticket_confirmation_node(state: AgentState, config: RunnableConfig):
     """Shows confirmation dialog and waits for user response."""
@@ -82,6 +90,20 @@ async def perform_ticket_node(state: AgentState, config: RunnableConfig):
     
     return state
 
+# Intent detection node
+async def detect_intent_node(state: AgentState, config: RunnableConfig):
+    """Detect which workflow to use based on user message."""
+    messages = state.get("messages", [])
+    if messages:
+        last_message = messages[-1]
+        user_message = str(last_message.content) if hasattr(last_message, 'content') else ""
+        if user_message:
+            workflow_name = detect_workflow_intent(user_message)
+            if workflow_name:
+                state["current_workflow"] = workflow_name
+                return state
+    return state
+
 # ----------------------------------------------------------------------
 # Build the graph
 # ----------------------------------------------------------------------
@@ -89,9 +111,17 @@ graph_builder = StateGraph(AgentState)
 
 # Add nodes
 graph_builder.add_node("chat_node", chat_node)
+graph_builder.add_node("detect_intent", detect_intent_node)
 graph_builder.add_node("ecocash_tools", ToolNode([get_balance, list_transactions, create_ticket, get_transaction_details]))
 graph_builder.add_node("ticket_confirmation", ticket_confirmation_node)
 graph_builder.add_node("perform_ticket", perform_ticket_node)
+
+# Add workflow subgraphs as nodes
+graph_builder.add_node("transaction_help", build_transaction_help_subgraph())
+graph_builder.add_node("refund", build_refund_subgraph())
+graph_builder.add_node("loan_enquiry", build_loan_enquiry_graph())
+graph_builder.add_node("card_issue", build_card_issue_subgraph())
+graph_builder.add_node("general_enquiry", build_general_enquiry_subgraph())
 
 # Define routing logic after chat node
 def route_after_chat(state: AgentState):
@@ -105,7 +135,21 @@ def route_after_chat(state: AgentState):
                 return "ticket_confirmation"
             # Route to tools for other tools
             return "ecocash_tools"
+    
+    # Check if we should route to a workflow subgraph
+    current_workflow = state.get("current_workflow")
+    if current_workflow == "transaction_help":
+        return "transaction_help"
+    
     return END
+
+# Define routing logic after intent detection
+def route_after_intent(state: AgentState):
+    """Route to appropriate workflow subgraph or continue to chat."""
+    current_workflow = state.get("current_workflow")
+    if current_workflow:
+        return current_workflow
+    return "chat_node"
 
 # Define routing logic after ticket confirmation
 def route_after_confirmation(state: AgentState):
@@ -119,11 +163,33 @@ def route_after_confirmation(state: AgentState):
     return END
 
 # Add edges
-graph_builder.add_edge(START, "chat_node")
+graph_builder.add_edge(START, "detect_intent")
+graph_builder.add_conditional_edges(
+    "detect_intent",
+    route_after_intent,
+    {
+        "transaction_help": "transaction_help",
+        "refund": "refund",
+        "loan_enquiry": "loan_enquiry",
+        "card_issue": "card_issue",
+        "general_enquiry": "general_enquiry",
+        "chat_node": "chat_node"
+    }
+)
+# After workflow subgraphs, continue to chat
+graph_builder.add_edge("transaction_help", "chat_node")
+graph_builder.add_edge("refund", "chat_node")
+graph_builder.add_edge("loan_enquiry", "chat_node")
+graph_builder.add_edge("card_issue", "chat_node")
+graph_builder.add_edge("general_enquiry", "chat_node")
 graph_builder.add_conditional_edges(
     "chat_node",
     route_after_chat,
-    {"ecocash_tools": "ecocash_tools", "ticket_confirmation": "ticket_confirmation", END: END}
+    {
+        "ecocash_tools": "ecocash_tools",
+        "ticket_confirmation": "ticket_confirmation",
+        END: END
+    }
 )
 graph_builder.add_edge("ecocash_tools", "chat_node")
 graph_builder.add_conditional_edges(
