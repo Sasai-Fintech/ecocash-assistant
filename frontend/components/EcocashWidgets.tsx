@@ -121,20 +121,23 @@ export function EcocashWidgets() {
           // Focus first
           chatInput.focus();
           
-          // Set value using native setter to properly trigger React's onChange
-          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-            window.HTMLTextAreaElement.prototype,
-            'value'
-          )?.set;
-          
-          if (nativeInputValueSetter) {
-            nativeInputValueSetter.call(chatInput, message);
-          } else {
-            chatInput.value = message;
-          }
+          // Set value directly
+          chatInput.value = message;
           
           // Create React-compatible input event
-          const inputEvent = new Event('input', { bubbles: true, cancelable: true });
+          // Use InputEvent if available, otherwise fallback to Event
+          let inputEvent: Event;
+          try {
+            inputEvent = new InputEvent('input', { 
+              bubbles: true, 
+              cancelable: true,
+              data: message,
+              inputType: 'insertText'
+            });
+          } catch (e) {
+            // Fallback for browsers that don't support InputEvent constructor
+            inputEvent = new Event('input', { bubbles: true, cancelable: true });
+          }
           chatInput.dispatchEvent(inputEvent);
           
           // Also trigger change event
