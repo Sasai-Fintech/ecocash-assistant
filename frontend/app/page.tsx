@@ -105,13 +105,13 @@ function CustomInput({ inProgress, onSend, isVisible, onStop }: InputProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 px-4 pt-4 pb-8 mb-6 border-t border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
+    <div className="flex items-center gap-2 px-3 sm:px-4 pt-3 sm:pt-4 pb-6 sm:pb-8 mb-4 sm:mb-6 border-t border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
       <input
         ref={inputRef}
         disabled={inProgress}
         type="text"
         placeholder="Ask anything"
-        className="flex-1 px-4 py-3 rounded-full border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 disabled:bg-gray-100 dark:disabled:bg-zinc-700 transition-all"
+        className="flex-1 px-4 py-2.5 sm:py-3 rounded-full border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 disabled:bg-gray-100 dark:disabled:bg-zinc-700 transition-all text-base"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -122,7 +122,7 @@ function CustomInput({ inProgress, onSend, isVisible, onStop }: InputProps) {
       {inProgress ? (
         <button
           type="button"
-          className="h-12 w-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           onClick={() => {
             if (onStop) {
               onStop();
@@ -133,13 +133,13 @@ function CustomInput({ inProgress, onSend, isVisible, onStop }: InputProps) {
           }}
           title="Cancel"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
       ) : (
         <button
           type="button"
           disabled={inProgress}
-          className="h-12 w-12 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           onClick={() => {
             if (inputRef.current) {
               handleSubmit(inputRef.current.value);
@@ -147,7 +147,7 @@ function CustomInput({ inProgress, onSend, isVisible, onStop }: InputProps) {
           }}
           title="Send"
         >
-          <Send className="h-5 w-5" />
+          <Send className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
       )}
     </div>

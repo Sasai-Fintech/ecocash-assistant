@@ -308,6 +308,79 @@
   @apply transition-all duration-200;
 }
 
+/* Message content styling - prevent overlap with icons */
+.copilotKitChat [data-copilot-chat-message] p,
+.copilotKitChat [data-copilot-chat-message] div[class*="content"],
+.copilotKitMessage p,
+.copilotKitMessage div[class*="content"] {
+  @apply mb-2 !important;
+  @apply pr-8 !important;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Action icons container - ensure proper spacing */
+.copilotKitChat [data-copilot-chat-message] ~ div[class*="action"],
+.copilotKitChat [data-copilot-chat-message] + div[class*="button"],
+.copilotKitMessage ~ div[class*="action"],
+.copilotKitMessage + div[class*="button"] {
+  @apply mt-1 !important;
+  @apply mb-2 !important;
+}
+
+/* CopilotKit action buttons row - prevent overlap */
+.copilotKitChat [data-copilot-chat-message] + div,
+.copilotKitChat [data-copilot-chat-message] ~ div[class*="flex"],
+.copilotKitMessage + div,
+.copilotKitMessage ~ div[class*="flex"] {
+  @apply mt-1 !important;
+}
+
+/* Ensure action icons are positioned below message content */
+.copilotKitChat [data-copilot-chat-message] button,
+.copilotKitChat [data-copilot-chat-message] svg,
+.copilotKitMessage button,
+.copilotKitMessage svg {
+  @apply relative !important;
+  z-index: 1;
+}
+
+/* Message wrapper - ensure content doesn't overlap with absolute positioned elements */
+.copilotKitChat [data-copilot-chat-message] > div:first-child,
+.copilotKitMessage > div:first-child {
+  @apply relative !important;
+  @apply z-0 !important;
+}
+
+/* Ensure message wrapper has proper spacing */
+.copilotKitChat [data-copilot-chat-message],
+.copilotKitMessage {
+  @apply relative !important;
+  @apply mb-3 !important;
+}
+
+/* User message bubbles - right aligned, dark background */
+.copilotKitChat [data-copilot-chat-message][data-role="user"],
+.copilotKitMessage[data-role="user"] {
+  @apply ml-auto !important;
+  @apply bg-gray-900 dark:bg-gray-800 !important;
+  @apply text-white !important;
+  @apply rounded-2xl rounded-tr-sm !important;
+  @apply px-4 py-3 !important;
+  @apply max-w-[80%] sm:max-w-[70%] !important;
+}
+
+/* Assistant message bubbles - left aligned, light background */
+.copilotKitChat [data-copilot-chat-message][data-role="assistant"],
+.copilotKitMessage[data-role="assistant"] {
+  @apply mr-auto !important;
+  @apply bg-gray-100 dark:bg-zinc-800 !important;
+  @apply text-gray-900 dark:text-gray-100 !important;
+  @apply rounded-2xl rounded-tl-sm !important;
+  @apply px-4 py-3 !important;
+  @apply max-w-[80%] sm:max-w-[70%] !important;
+}
+
 /* Modern button hover effects */
 button:hover {
   @apply transition-all duration-200;
@@ -332,8 +405,97 @@ button:hover {
   animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Mobile optimizations */
+/* Mobile optimizations - ChatGPT-like mobile UI */
 @media (max-width: 768px) {
+  /* Full width chat on mobile */
+  .copilotKitChat {
+    @apply rounded-none !important;
+    @apply h-screen !important;
+    @apply bg-white dark:bg-zinc-900 !important;
+  }
+  
+  /* Message bubbles - proper spacing and padding on mobile */
+  .copilotKitChat [data-copilot-chat-message],
+  .copilotKitMessage {
+    @apply mb-3 !important;
+    @apply mx-3 !important;
+  }
+  
+  /* User messages (right side, dark) - prevent overlap with icons */
+  .copilotKitChat [data-copilot-chat-message][data-role="user"],
+  .copilotKitMessage[data-role="user"] {
+    @apply ml-auto mr-3 !important;
+    @apply max-w-[85%] !important;
+    @apply px-3 py-2.5 !important;
+    @apply bg-gray-900 dark:bg-gray-800 !important;
+    @apply text-white !important;
+    @apply rounded-2xl rounded-tr-sm !important;
+  }
+  
+  /* AI messages (left side, light) - proper spacing */
+  .copilotKitChat [data-copilot-chat-message][data-role="assistant"],
+  .copilotKitMessage[data-role="assistant"] {
+    @apply mr-auto ml-3 !important;
+    @apply max-w-[85%] !important;
+    @apply px-3 py-2.5 !important;
+    @apply bg-gray-100 dark:bg-zinc-800 !important;
+    @apply text-gray-900 dark:text-gray-100 !important;
+    @apply rounded-2xl rounded-tl-sm !important;
+  }
+  
+  /* Message content - extra padding to prevent icon overlap */
+  .copilotKitChat [data-copilot-chat-message] p,
+  .copilotKitChat [data-copilot-chat-message] div[class*="content"],
+  .copilotKitMessage p,
+  .copilotKitMessage div[class*="content"] {
+    @apply pr-10 !important;
+    @apply mb-1 !important;
+    @apply text-sm !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Action icons - ensure they're below content, not overlapping */
+  .copilotKitChat [data-copilot-chat-message] ~ div[class*="action"],
+  .copilotKitChat [data-copilot-chat-message] + div[class*="button"],
+  .copilotKitChat [data-copilot-chat-message] ~ button,
+  .copilotKitMessage ~ div[class*="action"],
+  .copilotKitMessage + div[class*="button"],
+  .copilotKitMessage ~ button {
+    @apply mt-1 !important;
+    @apply mb-2 !important;
+    @apply mx-3 !important;
+  }
+  
+  /* Icon buttons row - proper spacing */
+  .copilotKitChat [data-copilot-chat-message] + div[class*="icon"],
+  .copilotKitChat [data-copilot-chat-message] ~ div[class*="icon"],
+  .copilotKitMessage + div[class*="icon"],
+  .copilotKitMessage ~ div[class*="icon"] {
+    @apply flex gap-2 !important;
+    @apply mt-1 mb-2 !important;
+    @apply px-2 !important;
+    @apply justify-start !important;
+  }
+  
+  /* Welcome message - smaller on mobile */
+  .copilotKitChat h2,
+  .copilotKitChat [class*="title"],
+  .copilotKitChat [class*="Title"] {
+    @apply text-lg !important;
+    @apply mb-6 mt-6 !important;
+    @apply px-4 !important;
+  }
+  
+  /* Input area - better mobile spacing */
+  .copilotKitChat input[type="text"],
+  .copilotKitChat textarea {
+    @apply text-base !important;
+    @apply py-3 !important;
+    @apply text-base !important;
+  }
+  
+  /* Transaction grid */
   .transaction-grid-scroll {
     @apply gap-3;
     padding-left: 0.5rem;
@@ -346,8 +508,10 @@ button:hover {
     scroll-snap-align: start;
   }
   
+  /* Suggestions - better mobile layout */
   .copilotKitSuggestions {
     @apply gap-2 px-2;
+    @apply pb-3 !important;
     -webkit-overflow-scrolling: touch;
   }
   
@@ -360,6 +524,21 @@ button:hover {
   button, a {
     min-height: 44px;
     min-width: 44px;
+  }
+  
+  /* Input container - better mobile padding */
+  .copilotKitChat form,
+  .copilotKitChat [class*="input-container"],
+  .copilotKitChat [class*="Input"] {
+    @apply px-3 !important;
+    @apply pb-4 !important;
+    @apply pt-2 !important;
+  }
+  
+  /* Custom input wrapper */
+  .copilotKitChat > div:has(input[type="text"]) {
+    @apply px-3 !important;
+    @apply pb-4 !important;
   }
 }
 
