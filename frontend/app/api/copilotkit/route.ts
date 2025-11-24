@@ -9,7 +9,10 @@ import {
 import OpenAI from "openai";
 
 const openai = new OpenAI();
-const llmAdapter = new OpenAIAdapter({ openai } as any);
+const llmAdapter = new OpenAIAdapter({ 
+  openai,
+  model: "gpt-4o-mini"
+} as any);
 const langsmithApiKey = process.env.LANGSMITH_API_KEY as string;
 
 export const POST = async (req: NextRequest) => {

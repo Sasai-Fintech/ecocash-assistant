@@ -4,7 +4,7 @@ Defines the workflow for the Ecocash Assistant.
 """
 
 from typing import cast
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -20,7 +20,7 @@ from engine.chat import chat_node
 from engine.state import AgentState
 
 # Import Ecocash tools
-from agent.tools import get_balance, list_transactions, create_ticket, get_transaction_details
+from agent.tools import get_balance, list_transactions, create_ticket, get_transaction_details, get_cash_flow_overview, get_incoming_insights, get_investment_insights, get_spends_insights
 
 # Import workflow subgraphs
 from agent.workflows.subgraphs import detect_workflow_intent, get_workflow_subgraph
@@ -29,6 +29,7 @@ from agent.workflows.subgraphs.refund_graph import build_refund_subgraph
 from agent.workflows.subgraphs.loan_enquiry_graph import build_loan_enquiry_graph
 from agent.workflows.subgraphs.card_issue_graph import build_card_issue_subgraph
 from agent.workflows.subgraphs.general_enquiry_graph import build_general_enquiry_subgraph
+from agent.workflows.subgraphs.financial_insights_graph import build_financial_insights_subgraph
 
 # Node for ticket confirmation (human-in-the-loop)
 async def ticket_confirmation_node(state: AgentState, config: RunnableConfig):
@@ -109,21 +110,32 @@ async def perform_ticket_node(state: AgentState, config: RunnableConfig):
 
 # Intent detection node
 async def detect_intent_node(state: AgentState, config: RunnableConfig):
-    """Detect which workflow to use based on user message.
+    """Detect workflow intent and send welcome message for new sessions.
     Only detects intent if no workflow is currently active.
     """
     thread_id = config.get("configurable", {}).get("thread_id", "NO_THREAD_ID")
     print(f"[DETECT_INTENT] Node executed with thread_id: {thread_id}")
+    
+    messages = state.get("messages", [])
+    user_messages = [msg for msg in messages if isinstance(msg, HumanMessage)]
+    
+    # If this is a new session (no user messages), send welcome message first
+    if len(user_messages) == 0:
+        from copilotkit.langgraph import copilotkit_emit_message
+        welcome_msg = "How can I help you today?"
+        welcome_ai_msg = AIMessage(content=welcome_msg)
+        state["messages"].append(welcome_ai_msg)
+        await copilotkit_emit_message(config, welcome_msg)
+        # Return state to end the flow (welcome message sent, wait for user input)
+        return state
+    
     # Only detect intent if no workflow is already active
     current_workflow = state.get("current_workflow")
     if current_workflow:
         logger.debug(f"Intent detection skipped: workflow '{current_workflow}' already active")
         return state
-    
-    messages = state.get("messages", [])
     if messages:
         # Get the last user message (HumanMessage)
-        from langchain_core.messages import HumanMessage
         last_user_message = None
         for msg in reversed(messages):
             if isinstance(msg, HumanMessage):
@@ -151,13 +163,14 @@ graph_builder = StateGraph(AgentState)
 # Add nodes
 graph_builder.add_node("chat_node", chat_node)
 graph_builder.add_node("detect_intent", detect_intent_node)
-graph_builder.add_node("ecocash_tools", ToolNode([get_balance, list_transactions, create_ticket, get_transaction_details]))
+graph_builder.add_node("ecocash_tools", ToolNode([get_balance, list_transactions, create_ticket, get_transaction_details, get_cash_flow_overview, get_incoming_insights, get_investment_insights, get_spends_insights]))
 graph_builder.add_node("ticket_confirmation", ticket_confirmation_node)
 graph_builder.add_node("perform_ticket", perform_ticket_node)
 
 # Add workflow subgraphs as nodes
 # Compile subgraphs at graph build time (not import time)
 graph_builder.add_node("transaction_help", build_transaction_help_subgraph())
+graph_builder.add_node("financial_insights", build_financial_insights_subgraph())
 graph_builder.add_node("refund", build_refund_subgraph())
 graph_builder.add_node("loan_enquiry", build_loan_enquiry_graph())
 graph_builder.add_node("card_issue", build_card_issue_subgraph())
@@ -213,6 +226,7 @@ graph_builder.add_conditional_edges(
     route_after_intent,
     {
         "transaction_help": "transaction_help",
+        "financial_insights": "financial_insights",
         "refund": "refund",
         "loan_enquiry": "loan_enquiry",
         "card_issue": "card_issue",
@@ -224,6 +238,7 @@ graph_builder.add_conditional_edges(
 # Subgraphs complete their summarization and pass control to chat_node
 # chat_node will handle the rest of the conversation
 graph_builder.add_edge("transaction_help", "chat_node")
+graph_builder.add_edge("financial_insights", "chat_node")
 graph_builder.add_edge("refund", "chat_node")
 graph_builder.add_edge("loan_enquiry", "chat_node")
 graph_builder.add_edge("card_issue", "chat_node")

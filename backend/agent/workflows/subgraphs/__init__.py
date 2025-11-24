@@ -8,6 +8,7 @@ from .refund_graph import build_refund_subgraph
 from .loan_enquiry_graph import build_loan_enquiry_graph
 from .card_issue_graph import build_card_issue_subgraph
 from .general_enquiry_graph import build_general_enquiry_subgraph
+from .financial_insights_graph import build_financial_insights_subgraph
 
 def detect_workflow_intent(user_message: str) -> Optional[str]:
     """
@@ -19,6 +20,8 @@ def detect_workflow_intent(user_message: str) -> Optional[str]:
     # Priority order: most specific first
     if any(kw in user_lower for kw in ["help with transaction", "transaction issue", "payment problem", "transaction to", "payment to"]):
         return "transaction_help"
+    elif any(kw in user_lower for kw in ["financial insights", "analyze", "analyse", "insights", "cash flow", "spending analysis", "incoming analysis", "investment analysis", "analyze incoming", "analyze spends", "analyze investment", "show insights", "financial overview", "spending breakdown"]):
+        return "financial_insights"
     elif any(kw in user_lower for kw in ["refund", "money back", "return payment", "get refund"]):
         return "refund"
     elif any(kw in user_lower for kw in ["loan", "borrow", "credit", "apply for loan", "loan application"]):
@@ -42,6 +45,7 @@ def get_workflow_subgraph(workflow_name: str):
         "loan_enquiry": build_loan_enquiry_graph,
         "card_issue": build_card_issue_subgraph,
         "general_enquiry": build_general_enquiry_subgraph,
+        "financial_insights": build_financial_insights_subgraph,
     }
     
     builder = subgraph_builders.get(workflow_name)
